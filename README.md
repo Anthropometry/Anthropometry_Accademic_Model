@@ -2,7 +2,7 @@
 
 **Body measurements from two photos and a height, checked on Ghanaian bodies.**
 Student research project at Ashesi University. The field data-collection app lives in
-[`Anthropometry/AnthropometryDC`](https://gh.hhj520.top/Anthropometry/AnthropometryDC).
+[`Anthropometry/AnthropometryDC`](https://github.com/Anthropometry/AnthropometryDC).
 
 > **Input:** front photo + side photo + height (weight and sex optional)
 > **Output:** body measurements in cm, each flagged when it should be confirmed with a tape

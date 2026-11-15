@@ -1,6 +1,6 @@
 # S3: BMnet-style photo model
 
-**Status:** draft — code built and tested on fake data; awaiting Ryan's approval and the first real run
+**Status:** approved by Ryan, 15 Nov 2026 — code built and tested on fake data; first real run next
 **Branch:** `s3-photo-model`
 
 ## Goal (one sentence)
@@ -49,7 +49,7 @@ measurements, and beats the S2 baseline on waist, chest, hip, leg length and thi
 `tests/test_train_smoke.py` (1 epoch on fake data, safe reload, refusal of a code-carrying file, CLI
 evaluate); `tests/test_preprocess.py` (shape, distance removed, no stretching, refusals).
 
-## Open questions for Ryan
+## Ryan's answers (15 Nov 2026)
 
-1. Approve D-015 (network and training settings) as proposed?
-2. Headline figure for the report: % within ±1.5 cm (proposed) or MAE?
+1. Network and training settings (D-015): **approved as proposed**.
+2. Headline figure: **% of people within ±1.5 cm** (D-016); MAE shown alongside.
