@@ -1,0 +1,42 @@
+# --- Never commit data, models or participant material (POLICY 6, D-014) ---
+bodym/
+data/
+datasets/
+*.tar
+*.zip
+*.npy
+*.npz
+*.png
+*.jpg
+*.jpeg
+*.heic
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.pkl
+*.csv
+runs/
+cache/
+drive_sim/
+# SMPL / SMPL-X model files (non-commercial licence; each user downloads their own)
+smpl*/
+models/
+*.npz
+
+# --- Secrets ---
+.env
+*.key
+*credentials*.json
+
+# --- Python ---
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
