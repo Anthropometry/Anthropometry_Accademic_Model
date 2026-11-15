@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      # CPU build of PyTorch: CI only runs the fake-data tests, so the large GPU build isn't needed.
+      - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest
+      # Notebooks must be committed without saved outputs (no data or images in the repo).
+      - name: Notebooks have no saved outputs
+        run: |
+          python - <<'EOF'
+          import json, pathlib, sys
+          bad = [str(p) for p in pathlib.Path("notebooks").glob("*.ipynb")
+                 if any(c.get("outputs") for c in json.loads(p.read_text())["cells"])]
+          if bad:
+              sys.exit(f"clear outputs before committing: {bad}")
+          EOF
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
