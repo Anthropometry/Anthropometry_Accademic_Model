@@ -17,19 +17,21 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 ## S2 Height + weight baseline — done, 15 Nov 2026
 
 - [x] Scored per person (D-007): Test-A results in RESULTS.md
-- [ ] Test-B baseline added to RESULTS.md (`anthro baseline --data bodym --test testB`)
+- [x] Test-B baseline added to RESULTS.md (`anthro baseline --data bodym --test testB`)
 
-## S3 Photo model — approved, code ready, first real run next
+## S3 Photo model — first run done, 15 Nov 2026 (run r1)
 
 - [x] `anthro train` / `anthro evaluate` built and tested on fake data
 - [x] Ryan approved specs/S3-photo-model.md (15 Nov 2026)
-- [ ] First full run on a Colab T4; epoch log and per-person Test-A / Test-B tables in RESULTS.md
+- [x] First full run on a Colab T4; per-person Test-A / Test-B tables in RESULTS.md
+- [ ] Epoch log (best epoch, validation score) from `train_log.json` added to RESULTS.md
 
 ## S4 Compare photo model vs baseline
 
-- [ ] Per measurement: MAE and % within ±1.5 cm, baseline vs photo, Test-A and Test-B
-- [ ] Lengths and girths reported separately; by sex and BMI band
-- [ ] Consistency across a person's photos
+- [x] Per measurement: MAE and % within ±1.5 cm, baseline vs photo, Test-A and Test-B
+- [x] By sex and BMI band
+- [ ] Lengths and girths reported separately
+- [x] Consistency across a person's photos
 
 ## S5 SMPL-X extras
 
