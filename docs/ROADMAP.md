@@ -24,7 +24,8 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [x] `anthro train` / `anthro evaluate` built and tested on fake data
 - [x] Ryan approved specs/S3-photo-model.md (15 Nov 2026)
 - [x] First full run on a Colab T4; per-person Test-A / Test-B tables in RESULTS.md
-- [ ] Epoch log (best epoch, validation score) from `train_log.json` added to RESULTS.md
+- [x] Epoch log added to RESULTS.md (best: epoch 25, val MAE 1.02 cm)
+- [ ] Seeds 1 and 2 to measure run-to-run variation (about 7 min each)
 
 ## S4 Compare photo model vs baseline
 

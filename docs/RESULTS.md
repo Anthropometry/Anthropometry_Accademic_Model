@@ -4,8 +4,8 @@ Only numbers from Ryan's real runs go here, each with its date, data fingerprint
 
 ## S3/S4 — Photo model vs baseline, run r1
 
-Run 15 Nov 2026, Google Colab T4, commit `5f3543e`, run folder `MyDrive/anthro/runs/r1`
-(`eval_report.json` holds the data fingerprint). Default settings from D-015, seed 0.
+Run 15 Nov 2026, Google Colab T4, commit `5f3543e`, data fingerprint `d9d4893ed2e13c7b`,
+run folder `MyDrive/anthro/runs/r1`. Default settings from D-015, seed 0.
 Every number is per person, averaging that person's photo pairs (D-007).
 
 ### Headline: % of people within ±1.5 cm (D-016)
@@ -91,8 +91,29 @@ Groups under 20 people are marked unreliable by the code; shown here in brackets
 - **Fairness gap at BMI 35+:** about 53% within tolerance versus 77–78% at BMI 18.5–25 on Test-B
   (23 women, 8 men). Larger bodies are the group most likely to be failed; see ACCESSIBILITY.md.
   This must be reported to the supervisor and checked again on Ghanaian participants.
-- Not recorded for r1: the per-epoch training log (best epoch, validation score). Kept in
-  `train_log.json` on Drive.
+
+### Training log (r1)
+
+Train 1,816 people / 5,533 pairs; validation 202 held-out training people / 601 pairs. About
+12 s per epoch on a T4, so the whole run (25 epochs plus image caching) took about 7 minutes.
+
+| Epoch | 1 | 3 | 5 | 7 | 10 | 13 | 16 | 19 | 22 | 25 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Train loss (standardised) | 0.593 | 0.296 | 0.259 | 0.235 | 0.196 | 0.171 | 0.142 | 0.122 | 0.102 | 0.091 |
+| Val MAE (cm, per person) | 2.08 | 1.50 | 1.26 | 1.23 | 1.22 | 1.12 | 1.06 | 1.05 | 1.02 | 1.02 |
+
+Best model: epoch 25, validation MAE 1.02 cm (epochs 22–25 equal to two decimals).
+
+- **No harmful overfitting:** validation error never rose; it flattened at 1.02 cm from epoch 22.
+- **The flattening is mostly the schedule:** one-cycle drives the learning rate to almost zero in
+  the last epochs, so the model stops changing. Epochs 16→25 gained only 0.04 cm, so simply
+  training longer is unlikely to fix chest and waist.
+- **Training loss keeps falling while validation stalls**: the model is starting to memorise the
+  training people. Gains now need more varied training signal (stronger augmentation, other
+  seeds), not more of the same.
+- Validation (1.02) sits between Test-A (0.88) and Test-B (1.22): validation people have about
+  3 photo pairs each, Test-A about 19, so Test-A averages away more noise.
+- One run, one seed. How much the numbers move from luck alone is not yet known (next: seeds 1, 2).
 
 ## S2 — Height + weight + sex baseline, Test-A, per person
 
