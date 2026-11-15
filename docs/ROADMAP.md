@@ -19,10 +19,10 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [x] Scored per person (D-007): Test-A results in RESULTS.md
 - [ ] Test-B baseline added to RESULTS.md (`anthro baseline --data bodym --test testB`)
 
-## S3 Photo model — code ready, spec awaiting approval
+## S3 Photo model — approved, code ready, first real run next
 
 - [x] `anthro train` / `anthro evaluate` built and tested on fake data
-- [ ] Ryan approves specs/S3-photo-model.md
+- [x] Ryan approved specs/S3-photo-model.md (15 Nov 2026)
 - [ ] First full run on a Colab T4; epoch log and per-person Test-A / Test-B tables in RESULTS.md
 
 ## S4 Compare photo model vs baseline

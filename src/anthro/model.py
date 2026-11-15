@@ -1,4 +1,4 @@
-"""The BMnet-style network (proposed in specs/S3-photo-model.md).
+"""The BMnet-style network (specs/S3-photo-model.md, approved 15 Nov 2026).
 
 BMnet itself was never released (searched GitHub, Hugging Face, Papers with Code and Amazon
 Science, 14 Nov 2026; DISCUSSION D-005), so we rebuild the idea, not the exact network:
