@@ -40,3 +40,9 @@ dist/
 
 # --- Notebooks ---
 .ipynb_checkpoints/
+
+# test coverage data
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml

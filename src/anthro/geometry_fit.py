@@ -1,6 +1,6 @@
 """S3b — cache geometry for every photo pair, tune the levels, learn the ellipse correction.
 
-specs/S3b-geometric-girth.md, experiments E0-E2 (approved 17 Nov 2026).
+specs/s3b-geometric-girth/spec.md, experiments E0-E2 (approved 17 Nov 2026).
 
 What it does
 ------------

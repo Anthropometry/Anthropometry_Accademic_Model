@@ -1,10 +1,10 @@
-# North Anchor — Anthropometry Academic Model
+# Mission (North Anchor) — Anthropometry Academic Model
 
 15 Nov 2026 · Ryan Tangu Mbun Tangwe · student research project at Ashesi University
 
 This is the single source the model work is built from. When a question about scope, method or
 success comes up, this file answers it; when it doesn't, Claude Code asks Ryan and records the
-answer in [DISCUSSION.md](../DISCUSSION.md).
+answer in [discussions.md](discussions.md).
 
 ## Mission
 

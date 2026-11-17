@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6"]
 
 [project.scripts]
 anthro = "anthro.cli:main"
@@ -46,3 +46,14 @@ ignore = ["S101", "S311"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+# Coverage (D-021): industry practice is 70-80%; CI fails below 80%. `__main__.py` is a two-line
+# entry point that only calls cli.main, which the tests cover directly.
+[tool.coverage.run]
+source = ["anthro"]
+omit = ["*/anthro/__main__.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = false
