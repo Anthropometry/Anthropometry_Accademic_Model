@@ -75,6 +75,26 @@ Reading:
 - For S6: BodyM's hip is at a fixed height, not the fullest point. A Ghanaian tailor's hip may be
   elsewhere; calibration must check the offset.
 
+### E3a: loss in cm (run r2) vs run r1, on the same 202 validation people (17 Nov 2026)
+
+Commit 95b0649 (`anthro evaluate --test val`). One person = 0.5 points on the % column.
+
+| Measurement | r1 MAE | r2 MAE | r1 % ±1.5 | r2 % ±1.5 |
+| --- | ---: | ---: | ---: | ---: |
+| chest | 1.86 | 1.81 | 52.5 | 50.5 |
+| waist | 2.08 | **1.93** | 48.5 | **51.5** |
+| hip | 1.56 | 1.54 | 58.9 | 60.4 |
+| thigh | 1.17 | 1.19 | 73.3 | 71.8 |
+| other girths and lengths | | | within ±1 point | |
+| overall val MAE (best epoch) | 1.02 | 1.01 | | |
+
+Reading: a small, real gain on the waist (−0.15 cm, 6 people), none clearly on chest or hip, nothing
+lost elsewhere; chest/waist predictions slightly more consistent across photos (chest 0.81 → 0.71 cm).
+The expected large gain did not appear: the network shares almost all of its work across the 14
+outputs, so reweighting the loss mostly redistributes effort in the last layer. The limit on chest
+and waist is information in the image, not the training goal. **Decision: keep the cm loss** for
+r3 and r4.
+
 ## S3/S4 — Photo model vs baseline, run r1
 
 Run 15 Nov 2026, Google Colab T4, commit `5f3543e`, data fingerprint `d9d4893ed2e13c7b`,
