@@ -95,6 +95,27 @@ outputs, so reweighting the loss mostly redistributes effort in the last layer. 
 and waist is information in the image, not the training goal. **Decision: keep the cm loss** for
 r3 and r4.
 
+### E3b: loss in cm + 512×256 images (run r3), same 202 validation people (17 Nov 2026)
+
+About 42 s per epoch on a T4 (12 s at 256×128); batch 64 fits. Best epoch 25, val MAE 0.95 cm.
+
+| Measurement | r1 % ±1.5 | r2 % ±1.5 | r3 % ±1.5 | r3 MAE |
+| --- | ---: | ---: | ---: | ---: |
+| chest | 52.5 | 50.5 | **57.4** | 1.69 |
+| waist | 48.5 | 51.5 | 52.5 | 1.98 |
+| hip | 58.9 | 60.4 | 60.4 | **1.43** (p90 3.21 → 2.70) |
+| thigh | 73.3 | 71.8 | **78.2** | 1.09 |
+| leg-length | 78.7 | 76.7 | **82.2** | 0.94 |
+| height | 84.2 | 82.2 | 86.6 | 0.79 |
+| shoulder-to-crotch | 78.2 | 81.7 | 84.7 | 0.85 |
+| **mean of 14** | 79.8 | 79.9 | **82.3** | |
+
+Reading: image detail was a real limit. Chest (+7 points, about 14 people), thigh and leg length
+improved well beyond the 0.5-point-per-person noise; nothing got worse. The waist barely moved:
+sharper outlines don't show the shape between the front and side views. That is the target for the
+geometry (E4). Women with BMI 35+: about 55% (8 people, unreliable alone, but a persistent gap).
+One seed per run: 1–2 point differences may be chance. **Decision: 512×256 for r4.**
+
 ## S3/S4 — Photo model vs baseline, run r1
 
 Run 15 Nov 2026, Google Colab T4, commit `5f3543e`, data fingerprint `d9d4893ed2e13c7b`,
