@@ -4,6 +4,12 @@ Problems met while building, what caused them and what fixed them. Newest first.
 
 | Date | Challenge | Cause | Fix | Where |
 | --- | --- | --- | --- | --- |
+| 17 Nov 2026 | Choosing between runs needed per-measurement scores | Training logged only the overall validation error, so chest/waist could only be compared on Test-A/B (dishonest) | Training prints and saves per-measurement validation scores at the best epoch | src/anthro/train.py |
+| 17 Nov 2026 | Geometry fit could leak into model selection | Fitting the correction on all training people includes the validation people that pick the best epoch | Fit excludes them (same seed and fraction); training refuses a fit from a different split | src/anthro/geometry_fit.py, train.py |
+| 17 Nov 2026 | Geometry cache would need pickle to load | Photo ids are strings; numpy stores string lists as objects | Store ids as fixed-width unicode arrays; load with `allow_pickle=False` | src/anthro/geometry_fit.py |
+| 17 Nov 2026 | Per-row loops too slow for ~9,000 pairs × hundreds of band settings | Python loop over rows and profiles | Whole-array numpy for runs, widths, depths and level search | src/anthro/geometry.py |
+| 16 Nov 2026 | Chest and waist far below the other measurements in r1 | Standardised loss made a 10 cm waist error cost the same as a 1 cm wrist error; 0.7 cm pixels | Loss in cm (D-017); 512×256 option (D-018) | src/anthro/train.py |
+| 15 Nov 2026 | Colab clone failed with a certificate error | Notebook pointed at a mirror host instead of github.com | Repository URL fixed; branch default set to the PR branch | notebooks/ |
 | 15 Nov 2026 | Consistency check printed `NaN` | Spread needs 2+ photos of a person; some splits have only one | Clear message instead of `NaN` | src/anthro/cli.py |
 | 15 Nov 2026 | First notebook loaded checkpoints with `weights_only=False` | Normalisation statistics were stored as numpy arrays | Store them as plain lists; load with `weights_only=True`; test that a code-carrying file is refused | src/anthro/checkpoint.py, tests/test_train_smoke.py |
 | 15 Nov 2026 | Baseline fix "didn't work": identical numbers after the change | The fix lines ran *before* the line that reassigned the tables, so they were overwritten | Rebuilt the cell with the de-duplication after table selection, plus a printed people count as a check | notebooks, src/anthro/baseline.py |

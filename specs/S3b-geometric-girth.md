@@ -1,6 +1,6 @@
 # S3b: Geometric girth step (width × depth → circumference), plus two training fixes
 
-**Status:** approved by Ryan, 17 Nov 2026 (D-017 to D-020 as proposed; retake share 10%)
+**Status:** approved by Ryan, 17 Nov 2026 (D-017 to D-020 as proposed; retake share 10%) — code built and tested on fake data, 17 Nov; real runs next (notebooks/03_s3b_geometry.ipynb)
 **Branch:** `s3b-geometric-girth` (stacked on `s1-s3-model-pipeline`, PR #1)
 
 ## Goal (one sentence)

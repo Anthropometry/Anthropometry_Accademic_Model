@@ -14,8 +14,9 @@ Student research project at Ashesi University. The field data-collection app liv
 | --- | --- | --- |
 | S1 | Load and understand BodyM (2,505 people) | ✅ Done |
 | S2 | Height + weight baseline, scored per person | ✅ Done on Test-A |
-| S3 | Train a BMnet-style photo model | 🟡 Code ready and tested; first real run next |
-| S4 | Compare photo model vs baseline | ⏳ After S3 |
+| S3 | Train a BMnet-style photo model | ✅ Run r1: on par with published BMnet on Test-A |
+| S3b | Geometric girth step + training fixes | 🟡 Code built and tested; real runs next |
+| S4 | Compare photo model vs baseline | 🟡 r1 vs baseline done; final after S3b |
 | S5 | SMPL-X fit for extra tailoring measurements | ⏳ After S4 |
 | S6 | Ghanaian calibration (photos + tape, 40+ people) | ⏳ Needs ethics approval |
 | S7 | Demo: upload two photos + height, get measurements | ⏳ Final |
