@@ -59,10 +59,14 @@ CORR_FEATURES = ("DW", "bmi", "male", "fullness", "merge")
 LEVEL_FEATURES = ("W", "D", "C0", "C_hat", "DW", "side_split", "merge")
 BODY_FEATURES = ("fullness", "edge_soft", "mask_px_height", "geo_ok")
 
+# Search grids. First real run (17 Nov 2026) chose an EDGE value for all three levels, so the
+# optimum lay outside the grid; the grids were widened and `fit()` now warns on an edge choice.
 SEARCH = {
-    "chest": {"chest_offset": [0.0, 0.015, 0.03, 0.045, 0.06, 0.08]},
-    "waist": {"waist_band": [[lo, hi] for lo in (0.30, 0.33, 0.36) for hi in (0.43, 0.46, 0.49)]},
-    "hip": {"hip_band": [[lo, hi] for lo in (0.44, 0.47, 0.50) for hi in (0.56, 0.59, 0.62)]},
+    "chest": {"chest_offset": [round(x, 3) for x in np.arange(0.0, 0.181, 0.02)]},
+    "waist": {"waist_band": [[lo, hi] for lo in (0.30, 0.33, 0.36, 0.39, 0.42)
+                             for hi in (0.46, 0.49, 0.52, 0.55) if hi - lo >= 0.06]},
+    "hip": {"hip_band": [[lo, hi] for lo in (0.47, 0.50, 0.53, 0.56)
+                         for hi in (0.53, 0.56, 0.59, 0.62, 0.65) if hi - lo >= 0.03]},
 }
 
 
@@ -238,6 +242,16 @@ def _person_mae(t: pd.DataFrame, pred: np.ndarray, truth: pd.Series) -> float:
     return float((p - truth.loc[p.index]).abs().mean()) if len(p) else np.inf
 
 
+def _at_edge(options: list, best: int) -> bool:
+    """True if the chosen setting is the smallest or largest value searched (for a band: either
+    limit at its smallest or largest searched value), i.e. the best may lie outside the grid."""
+    chosen = options[best]
+    if not isinstance(chosen, list):
+        return best in (0, len(options) - 1)
+    los, his = sorted({o[0] for o in options}), sorted({o[1] for o in options})
+    return chosen[0] in (los[0], los[-1]) or chosen[1] in (his[0], his[-1])
+
+
 def fit(train_split: pd.DataFrame, c: dict, seed: int = 0, val_fraction: float = 0.1,
         k: int = 5, verbose: bool = True) -> dict:
     """Tune levels and fit the correction on the training part of the train split."""
@@ -263,7 +277,7 @@ def fit(train_split: pd.DataFrame, c: dict, seed: int = 0, val_fraction: float =
         best = int(np.nanargmin(scores))
         params[key] = options[best]
         search_log[name] = {"param": key, "options": options, "cv_mae_cm": [round(s, 3) for s in scores],
-                            "chosen": options[best]}
+                            "chosen": options[best], "at_edge": _at_edge(options, best)}
 
     t = level_table(fit_df, cs, params)
     correction, e1, e2, k_rows = {}, {}, {}, []
@@ -304,7 +318,8 @@ def fit(train_split: pd.DataFrame, c: dict, seed: int = 0, val_fraction: float =
               f"{k}-fold CV grouped by person")
         print("\nlevel search (CV MAE of a straight-line fit to C0, cm):")
         for name, s in search_log.items():
-            print(f"  {name:5s} {s['param']} = {s['chosen']}   (best {min(s['cv_mae_cm']):.2f} cm)")
+            edge = "   <- WARNING: at the edge of the search grid" if s["at_edge"] else ""
+            print(f"  {name:5s} {s['param']} = {s['chosen']}   (best {min(s['cv_mae_cm']):.2f} cm){edge}")
         print("\n== E1: ellipse alone (C0 vs true girth, per person) ==")
         print(pd.DataFrame(e1).T.to_string())
         print("\n== k = true / ellipse, by sex and BMI band (k < 1: ellipse over-reads) ==")

@@ -2,6 +2,54 @@
 
 Only numbers from Ryan's real runs go here, each with its date, data fingerprint and commit.
 
+## S3b — Geometry on real BodyM (E0–E2, 17 Nov 2026, commit 2e72aa9)
+
+### E0: can full-resolution geometry work on BodyM? Yes.
+
+| | train | Test-A | Test-B |
+| --- | ---: | ---: | ---: |
+| Photo pairs measured | 6,134 (100%) | 1,684 (100%) | 1,160 (100%) |
+| Mask size | 960×720 | 960×720 | 960×720 |
+| Body height in pixels (median / 5th pct) | 832 / 772 | 836 / 792 | 847 / 804 |
+| mm per pixel (170 cm person) | 2.0 | 2.0 | 2.0 |
+| All three levels measurable | 97.7% | 94.0% | 97.1% |
+| Arm touching at chest / waist / hip | 1.3 / 0.1 / 2.3% | 1.4 / 0.2 / 6.8% | 1.2 / 0.0 / 2.3% |
+| Edge softness (median) | 0 (hard binary masks) | 0 | 0 |
+
+Reading: 2 mm per pixel meets the ≤ 2 mm the research brief recommends (the network's 256 px images
+are 7 mm). Arms rarely touch the body. Masks are hard 0/255, so there is no sub-pixel edge detail.
+
+### E1 + E2, first fit (search grid too narrow; rerun pending)
+
+Fitted on 1,816 training people (validation people excluded), 5-fold CV grouped by person.
+
+**The ellipse under-reads every girth (k = true ÷ ellipse > 1):**
+
+| Level | k, slim (BMI 18.5–25) | k, heavy (BMI 35+) | Ellipse alone MAE | Ellipse alone % ±1.5 |
+| --- | ---: | ---: | ---: | ---: |
+| chest | 1.24 | 1.04–1.06 | 16.27 cm | 1.1% |
+| waist | 1.08–1.11 | 1.08–1.12 | 7.81 cm | 5.4% |
+| hip | 1.05 | 1.06–1.07 | 6.00 cm | 10.7% |
+
+**Corrected geometry (k fitted) vs height + weight + sex baseline (CV, per person):**
+
+| Level | Geometry MAE | Geometry % ±1.5 | Baseline MAE | Baseline % ±1.5 |
+| --- | ---: | ---: | ---: | ---: |
+| chest | 4.22 | 23.0 | 3.03 | 32.3 |
+| waist | **2.71** | **38.4** | 3.51 | 28.4 |
+| hip | 3.36 | 31.7 | 2.23 | 42.7 |
+
+Reading:
+- Torsos are boxier than ellipses: the true girth is 5–11% larger at waist and hip, as the
+  superellipse discussion predicted.
+- The chest is far from an ellipse in slim people (24% under-read), less so in heavy people. The
+  chest profile has hollows (between and under the breasts, the spine) and a slim chest is flatter.
+- Geometry alone beats the baseline **only for the waist**. For chest and hip it is worse. This
+  matches the research: geometry is a feature for the network, not a replacement for it.
+- **Flaw found:** all three chosen levels were at the edge of the search grid, so the best levels
+  were outside the grid. The grid has been widened and `geometry-fit` now warns on an edge choice;
+  E1/E2 must be rerun before E4.
+
 ## S3/S4 — Photo model vs baseline, run r1
 
 Run 15 Nov 2026, Google Colab T4, commit `5f3543e`, data fingerprint `d9d4893ed2e13c7b`,
