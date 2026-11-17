@@ -21,7 +21,8 @@ jobs:
       - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -e ".[dev]"
       - run: ruff check .
-      - run: pytest
+      # Coverage is measured on every pull request; the run fails below 80% (pyproject.toml).
+      - run: pytest --cov --cov-report=term-missing
       # Notebooks must be committed without saved outputs (no data or images in the repo).
       - name: Notebooks have no saved outputs
         run: |
