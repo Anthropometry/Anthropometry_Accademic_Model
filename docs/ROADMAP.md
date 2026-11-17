@@ -27,9 +27,9 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [x] Epoch log added to RESULTS.md (best: epoch 25, val MAE 1.02 cm)
 - [ ] Seeds 1 and 2 to measure run-to-run variation (about 7 min each)
 
-## S3b Geometric girth + training fixes — spec proposed 17 Nov 2026, waiting for Ryan
+## S3b Geometric girth + training fixes — spec approved 17 Nov 2026, building
 
-- [ ] Ryan approves specs/S3b-geometric-girth.md (D-017 to D-020)
+- [x] Ryan approved specs/S3b-geometric-girth.md (D-017 to D-020), 17 Nov 2026
 - [ ] A1 loss in cm · A2 512×256 images
 - [ ] Geometry: width, depth, ellipse, levels, correction, fullness, flags (E0–E2)
 - [ ] Hybrid model (E4) · retake flag (E5) · bootstrap confidence intervals

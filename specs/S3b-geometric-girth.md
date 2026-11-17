@@ -1,6 +1,6 @@
 # S3b: Geometric girth step (width × depth → circumference), plus two training fixes
 
-**Status:** draft, proposed 17 Nov 2026. Waiting for Ryan's approval (DISCUSSION D-017 to D-020).
+**Status:** approved by Ryan, 17 Nov 2026 (D-017 to D-020 as proposed; retake share 10%)
 **Branch:** `s3b-geometric-girth` (stacked on `s1-s3-model-pipeline`, PR #1)
 
 ## Goal (one sentence)
@@ -158,7 +158,11 @@ girths are reported separately. % within ±1.5 cm is the headline (D-016).
 | `--geo-features` checkpoint saves and reloads with `weights_only=True` | allow |
 | Retake threshold reproduces the chosen firing share on validation | allow |
 
-## Open questions for Ryan
+## Ryan's answers (17 Nov 2026)
+
+All four approved as proposed; retake flag share 10%.
+
+## Questions as asked
 
 1. **D-017:** approve loss in cm (A1)?
 2. **D-018:** approve 512×256 images (A2), with about 4× training time?
