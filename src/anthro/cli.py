@@ -105,20 +105,29 @@ def _evaluate(a) -> None:
 
     threshold = None
     if geo_fit is not None and a.retake_share > 0:
-        _, val_df = split_by_person(splits["train"], cfg.val_fraction, cfg.seed)
-        tag = f"s{cfg.seed}v{cfg.val_fraction:g}"
-        vpred, vtab = predict(val_df, "train", f"val_{tag}", rows_of=splits["train"])
-        threshold = retake_threshold(disagreement(val_df, vtab, vpred), a.retake_share)
+        _, val_df0 = split_by_person(splits["train"], cfg.val_fraction, cfg.seed)
+        tag0 = f"s{cfg.seed}v{cfg.val_fraction:g}"
+        vpred, vtab = predict(val_df0, "train", f"val_{tag0}", rows_of=splits["train"])
+        threshold = retake_threshold(disagreement(val_df0, vtab, vpred), a.retake_share)
         print(f"retake warning: fires when geometry and network differ by more than {threshold:.2f} cm "
               f"(chosen on validation people to fire for {a.retake_share:.0%})")
 
     report = {}
+    fit_df, val_df = split_by_person(splits["train"], cfg.val_fraction, cfg.seed)
+    tag = f"s{cfg.seed}v{cfg.val_fraction:g}"
     for t in a.test:
-        df = splits[t]
-        pred, gtab = predict(df, t, t)
+        if t == "val":
+            # The validation people this model chose its best epoch on: the fair place to compare
+            # runs (S3b), since Test-A/B stay untouched until the final choice. The baseline is
+            # refitted without them so it doesn't see their answers either.
+            df, base_train = val_df, fit_df
+            pred, gtab = predict(df, "train", f"val_{tag}", rows_of=splits["train"])
+        else:
+            df, base_train = splits[t], splits["train"]
+            pred, gtab = predict(df, t, t)
         err = per_person_errors(df, pred)
         photo = summarise(err)
-        base = baseline.run(splits["train"], df)
+        base = baseline.run(base_train, df)
         table = base.add_prefix("baseline_").join(photo.add_prefix("photo_"))
         if a.bootstrap:
             table = table.join(bootstrap_ci(err, a.bootstrap).add_prefix("photo_"))
@@ -144,7 +153,7 @@ def _evaluate(a) -> None:
             entry["retake"] = {"threshold_cm": threshold, "flagged_share": float(flagged.mean()),
                                "report": rr.reset_index().to_dict(orient="records")}
         report[t] = entry
-    out = Path(a.ckpt).parent / "eval_report.json"
+    out = Path(a.ckpt).parent / ("eval_report_val.json" if a.test == ["val"] else "eval_report.json")
     out.write_text(json.dumps(gfit.to_plain(report), indent=2))
     print(f"\nsaved {out}")
 
@@ -194,7 +203,8 @@ def main(argv: list[str] | None = None) -> None:
     e.add_argument("--data", required=True)
     e.add_argument("--ckpt", required=True)
     e.add_argument("--cache", default=None)
-    e.add_argument("--test", nargs="+", default=["testA", "testB"])
+    e.add_argument("--test", nargs="+", default=["testA", "testB"],
+                   help="testA, testB, or val (the model's own validation people, for comparing runs)")
     e.add_argument("--geo-cache", default=None)
     e.add_argument("--bootstrap", type=int, default=0, help="95%% confidence intervals from N resamples")
     e.add_argument("--retake-share", type=float, default=0.10,

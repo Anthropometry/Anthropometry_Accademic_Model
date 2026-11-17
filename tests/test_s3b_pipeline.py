@@ -151,3 +151,12 @@ def test_edge_of_search_grid_is_detected():
     assert gfit._at_edge([0.0, 0.02, 0.04], 2) and not gfit._at_edge([0.0, 0.02, 0.04], 1)
     bands = [[0.3, 0.46], [0.33, 0.49], [0.36, 0.52]]
     assert gfit._at_edge(bands, 0) and gfit._at_edge(bands, 2) and not gfit._at_edge(bands, 1)
+
+
+def test_evaluate_on_validation_people(bodym, tmp_path, capsys):
+    cfg = TrainConfig(**CFG)
+    path = train_mod.run(str(bodym), str(tmp_path / "v"), cfg, device="cpu")
+    main(["evaluate", "--data", str(bodym), "--ckpt", str(path), "--test", "val"])
+    out = capsys.readouterr().out
+    assert "== val: 6 people" in out                   # 25% of 24 training people
+    assert (path.parent / "eval_report_val.json").exists()
