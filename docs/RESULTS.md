@@ -2,6 +2,72 @@
 
 Only numbers from Ryan's real runs go here, each with its date, data fingerprint and commit.
 
+## S3b — Final test, scored once: run r4 on Test-A and Test-B (17 Nov 2026)
+
+Run r4 (cm loss, 512×256 images, 25 geometric features), chosen on validation before this run.
+95% confidence intervals from 1,000 resamples of people.
+
+### % of people within ±1.5 cm (headline) and MAE
+
+| Measurement | Test-A r1 | **Test-A r4** (95% CI) | r4 MAE A | Test-B r1 | **Test-B r4** (95% CI) | r4 MAE B |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| wrist | 100.0 | 100.0 (100–100) | 0.43 | 97.3 | 97.3 (95.5–98.8) | 0.52 |
+| ankle | 94.3 | 97.7 (94.3–100) | 0.59 | 89.0 | 90.5 (87.8–93.2) | 0.72 |
+| forearm | 96.6 | 97.7 (93.1–100) | 0.47 | 90.0 | 91.0 (87.8–93.8) | 0.67 |
+| shoulder-breadth | 98.9 | 97.7 (94.3–100) | 0.48 | 91.8 | 91.8 (89.0–94.2) | 0.69 |
+| bicep | 94.3 | 94.3 (88.5–98.9) | 0.67 | 82.0 | 82.0 (78.2–85.8) | 0.90 |
+| arm-length | 89.7 | 94.3 (88.5–98.9) | 0.64 | 88.0 | 86.0 (82.8–89.2) | 0.83 |
+| calf | 88.5 | 85.1 (77.0–92.0) | 0.73 | 79.5 | 80.0 (76.0–84.0) | 0.98 |
+| height (scan) | 83.9 | 83.9 (75.9–90.8) | 0.94 | 72.5 | 70.3 (65.8–74.8) | 1.46 |
+| shoulder-to-crotch | 81.6 | 82.8 (74.7–89.7) | 0.85 | 79.0 | 75.5 (71.5–79.5) | 1.11 |
+| thigh | 72.4 | 78.2 (69.0–86.2) | 0.98 | 70.0 | 68.5 (63.7–73.0) | 1.23 |
+| leg-length | 77.0 | 73.6 (64.4–82.8) | 1.10 | 67.0 | 70.5 (66.0–74.8) | 1.36 |
+| waist | 63.2 | **70.1** (59.8–79.3) | 1.26 | 41.3 | 42.5 (38.0–47.2) | 2.34 |
+| hip | 72.4 | 63.2 (52.9–72.4) | 1.17 | 53.8 | 50.8 (45.5–55.2) | 2.00 |
+| chest | 56.3 | 57.5 (47.1–67.8) | **1.42** | 41.3 | 42.0 (37.5–46.8) | 2.32 |
+| **mean of 14** | 83.5 | **84.0** | **0.84** | 74.5 | 74.2 | 1.22 |
+
+r1 MAE for comparison: Test-A mean 0.88 (chest 1.67, waist 1.33, hip 1.12); Test-B mean 1.22. Published
+BMnet, Test-A mean 0.92 (scoring protocol may differ).
+
+### Consistency (spread of one person's predictions across photos, cm), r1 → r4
+
+| | chest | waist | hip |
+| --- | --- | --- | --- |
+| Test-A | 1.25 → 1.21 | 1.34 → 1.33 | 0.94 → 1.03 |
+| Test-B | 1.54 → **1.82** | 1.89 → **2.11** | 1.19 → **1.72** |
+
+### Retake warning (E5): threshold 7.80 cm, set on validation people to fire for 10%
+
+| | Flagged | Not flagged: all-14 % | Flagged: all-14 % | Not flagged: waist % | Flagged: waist % |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Test-A | 8% (7 people) | 84.6 | 76.5 | 70.0 | 71.4 |
+| Test-B | **32%** (128 people) | 76.6 | 69.1 | 47.4 | 32.0 |
+
+### Sex × BMI (Test-B, all 14 pooled)
+
+Women BMI 35+: 53.7% (23 people); men BMI 35+: 57.1% (8); BMI 18.5–25: 76–78%. Unchanged since r1.
+
+### Reading
+
+- **Test-A improved; Test-B did not.** Validation (same capture sessions as training) rose
+  79.8 → 82.1% and Test-A 83.5 → 84.0% (waist 63 → 70%, chest MAE 1.67 → 1.42 cm), but Test-B is
+  unchanged (74.5 → 74.2%, MAE 1.22 both). With 400 people the CIs are tight: a real null result.
+- **Hip got worse on both** (A 72 → 63%, B 54 → 51%). Likely cause: the geometry places the hip at a
+  fixed 52% of body height, which moves with camera tilt and framing.
+- **r4 is less stable on Test-B photos** (spread up 0.2–0.5 cm). Sharper images and explicit widths read
+  the outline in more detail, and so react more to capture differences. The research brief described
+  Test-B as captured with more varied camera orientations and lighting, and predicted geometric
+  features would be noisiest there.
+- **The retake warning works as a photo-quality detector.** It fires 3× its target rate on Test-B and
+  the people it flags are measured worse (69 vs 77% overall; waist 32 vs 47%).
+- **Implication for the system:** under controlled capture (Test-A-like), the model reaches 84% of
+  people within ±1.5 cm overall and 70% on the waist. The app's capture protocol (level phone, fixed
+  distance, A-pose, fitted clothing) plus the retake warning is as important as the model.
+- **Next lever (proposed, not run):** train with simulated capture variation (small tilts, shifts,
+  perspective) so the model ignores it; repeat seeds to measure run-to-run variation.
+- **Fairness gap persists:** BMI 35+ about 54–57% vs 76–78% at BMI 18.5–25 on Test-B.
+
 ## S3b — Geometry on real BodyM (E0–E2, 17 Nov 2026, commit 2e72aa9)
 
 ### E0: can full-resolution geometry work on BodyM? Yes.

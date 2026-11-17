@@ -27,15 +27,16 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [x] Epoch log added to RESULTS.md (best: epoch 25, val MAE 1.02 cm)
 - [ ] Seeds 1 and 2 to measure run-to-run variation (about 7 min each)
 
-## S3b Geometric girth + training fixes — code built 17 Nov 2026, waiting for Ryan's Colab run
+## S3b Geometric girth + training fixes — done 17 Nov 2026 (final: r4; Test-A up, Test-B unchanged)
 
 - [x] Ryan approved specs/S3b-geometric-girth.md (D-017 to D-020), 17 Nov 2026
 - [x] A1 loss in cm · A2 512×256 images (built, tested on fake data)
 - [x] Geometry: width, depth, ellipse, levels, correction, fullness, flags (built)
-- [ ] E0–E2 on real BodyM: notebooks/03_s3b_geometry.ipynb cells 3–4
+- [x] E0–E2 on real BodyM (three fits; levels: chest at armpit, waist narrowest 36–49%, hip fixed 52%)
 - [x] Hybrid model · retake flag · bootstrap confidence intervals · girths and lengths split (built)
-- [ ] E3a, E3b, E4 runs and validation comparison (cells 5–7)
-- [ ] Final Test-A / Test-B scored once on the chosen configuration
+- [x] E3a (r2), E3b (r3), E4 (r4) compared on validation; r4 chosen
+- [x] Final Test-A / Test-B scored once on r4 (RESULTS.md)
+- [ ] Proposed next: capture-variation augmentation + repeat seeds (needs a spec)
 - Execution prompt: docs/prompts/S3b-execute.md
 
 ## S4 Compare photo model vs baseline
