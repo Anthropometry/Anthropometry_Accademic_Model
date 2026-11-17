@@ -71,3 +71,57 @@ def by_group(df: pd.DataFrame, err: pd.DataFrame, tol: float = TOLERANCE_CM) -> 
     # Fewer than 20 people: the percentage moves by 5+ points per person, so don't over-read it.
     out["note"] = np.where(out["people"] < MIN_GROUP, "few people: unreliable", "")
     return out
+
+
+# ---------------------------------------------------------------- S3b additions
+
+def bootstrap_ci(err: pd.DataFrame, n: int = 1000, seed: int = 0, tol: float = TOLERANCE_CM) -> pd.DataFrame:
+    """95% confidence intervals for MAE and % within tolerance, resampling PEOPLE.
+
+    Why: Test-A has 87 people, so one person moves the % column by ~1.1 points. An interval tells
+    the reader whether a difference between two models is bigger than that luck.
+    """
+    rng = np.random.default_rng(seed)
+    E = err.to_numpy(np.float64)
+    idx = rng.integers(0, len(E), (n, len(E)))
+    mae = E[idx].mean(1)
+    pct = (E[idx] <= tol).mean(1) * 100
+    lo, hi = np.percentile(mae, [2.5, 97.5], 0), np.percentile(pct, [2.5, 97.5], 0)
+    cols = err.columns
+    return pd.DataFrame({
+        "MAE_95ci": [f"{lo[0][j]:.2f}-{lo[1][j]:.2f}" for j in range(len(cols))],
+        f"pct_{tol:g}_95ci": [f"{hi[0][j]:.1f}-{hi[1][j]:.1f}" for j in range(len(cols))],
+    }, index=cols)
+
+
+RETAKE_LEVELS = ("chest", "waist", "hip")
+
+
+def disagreement(df: pd.DataFrame, geo_table: pd.DataFrame, pred_cm: np.ndarray) -> pd.Series:
+    """Per person: average over their photo pairs of the largest |geometry - network| gap (cm)
+    across chest, waist and hip. A pair whose geometry could not be measured counts as infinite:
+    if we can't cross-check it, the honest answer is "please retake"."""
+    p = pd.DataFrame(pred_cm, columns=list(MEASUREMENTS))
+    gaps = np.column_stack([(geo_table[f"{lv}_C_hat"].to_numpy() - p[lv].to_numpy()) for lv in RETAKE_LEVELS])
+    worst = np.where(np.isfinite(gaps).all(1), np.abs(gaps).max(1), np.inf)
+    return pd.Series(worst, index=df[SUBJECT_COL].to_numpy()).groupby(level=0).mean()
+
+
+def retake_threshold(val_disagreement: pd.Series, share: float) -> float:
+    """Gap (cm) above which the warning fires, chosen so it fires for `share` of validation people."""
+    if not 0 < share < 1:
+        raise ValueError("retake share must be between 0 and 1")
+    return float(np.quantile(val_disagreement.to_numpy(), 1 - share))
+
+
+def retake_report(err: pd.DataFrame, flagged: pd.Series, tol: float = TOLERANCE_CM) -> pd.DataFrame:
+    rows = {}
+    for name, mask in (("not flagged", ~flagged), ("flagged: retake", flagged)):
+        e = err.loc[mask[mask].index.intersection(err.index)]
+        r = {"people": len(e)}
+        for lv in RETAKE_LEVELS:
+            r[f"{lv}_MAE"] = round(float(e[lv].mean()), 2) if len(e) else np.nan
+            r[f"{lv}_pct"] = round(float((e[lv] <= tol).mean() * 100), 1) if len(e) else np.nan
+        r["all14_pct"] = round(float((e <= tol).to_numpy().mean() * 100), 1) if len(e) else np.nan
+        rows[name] = r
+    return pd.DataFrame(rows).T

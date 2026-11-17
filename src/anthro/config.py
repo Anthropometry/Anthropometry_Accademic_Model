@@ -51,6 +51,21 @@ class TrainConfig:
     augment: bool = True
     seed: int = 0
     num_workers: int = 2
+    # S3b (D-017): "std" = L1 on standardised targets (run r1); "cm" = L1 in cm, so a 1 cm
+    # waist error costs the same as a 1 cm wrist error, matching how we score.
+    loss: str = "std"
+    # S3b (D-019): number of geometric features joined to the network (0 = r1's network).
+    n_geo: int = 0
+
+    def __post_init__(self) -> None:
+        if self.loss not in ("std", "cm"):
+            raise ValueError(f"loss must be 'std' or 'cm', not {self.loss!r}")
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+# Girths wrap around the body; lengths run along it. Reported separately (S3b, part C) because
+# they fail for different reasons: girths depend on cross-section shape, lengths on landmarks.
+GIRTHS: tuple[str, ...] = ("ankle", "bicep", "calf", "chest", "forearm", "hip", "thigh", "waist", "wrist")
+LENGTHS: tuple[str, ...] = tuple(m for m in MEASUREMENTS if m not in GIRTHS)

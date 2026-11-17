@@ -3,6 +3,10 @@
     anthro baseline --data bodym --test testA
     anthro train    --data bodym --out runs/r1 [--epochs 25] [--cache DIR]
     anthro evaluate --data bodym --ckpt runs/r1/best.pt [--test testA testB]
+    anthro geometry     --data bodym --out GEO_CACHE                       (S3b, E0)
+    anthro geometry-fit --data bodym --cache GEO_CACHE --out geo_fit.json  (S3b, E1-E2)
+    anthro train ... --loss cm [--geo-fit geo_fit.json --geo-cache GEO_CACHE]
+    anthro evaluate ... [--geo-cache GEO_CACHE] [--bootstrap 1000] [--retake-share 0.10]
 
 Why a CLI rather than logic in notebooks: notebooks are hard to review in a pull request and
 easy to run out of order. Notebooks here only call these commands, so what the supervisor
@@ -19,11 +23,21 @@ import torch
 from torch.utils.data import DataLoader
 
 from . import baseline, checkpoint
+from . import geometry_fit as gfit
 from . import train as train_mod
-from .config import TrainConfig
-from .data import fingerprint, load_all, people
+from .config import GIRTHS, LENGTHS, TrainConfig
+from .data import fingerprint, load_all, people, split_by_person
 from .dataset import SilhouetteSet, cache_images
-from .evaluate import by_group, consistency, per_person_errors, summarise
+from .evaluate import (
+    bootstrap_ci,
+    by_group,
+    consistency,
+    disagreement,
+    per_person_errors,
+    retake_report,
+    retake_threshold,
+    summarise,
+)
 
 
 def _baseline(a) -> None:
@@ -35,30 +49,81 @@ def _baseline(a) -> None:
 
 def _train(a) -> None:
     cfg = TrainConfig(epochs=a.epochs, batch_size=a.batch_size, img_h=a.img_h, img_w=a.img_w,
-                      pretrained=not a.no_pretrained, seed=a.seed, num_workers=a.workers)
-    path = train_mod.run(a.data, a.out, cfg, cache_dir=a.cache)
+                      pretrained=not a.no_pretrained, seed=a.seed, num_workers=a.workers, loss=a.loss,
+                      val_fraction=a.val_fraction)
+    geo_fit = json.loads(Path(a.geo_fit).read_text()) if a.geo_fit else None
+    path = train_mod.run(a.data, a.out, cfg, cache_dir=a.cache, geo_fit=geo_fit, geo_cache=a.geo_cache)
     print(f"\nbest model: {path}")
+
+
+def _geometry(a) -> None:
+    splits = load_all(a.data)
+    fp = fingerprint(a.data)
+    for t in a.split:
+        c = gfit.build_cache(splits[t], a.data, a.out, t, fp)
+        print(f"\n== E0 geometry diagnostics: {t} ==")
+        print(gfit.diagnostics(c).to_string())
+
+
+def _geometry_fit(a) -> None:
+    splits = load_all(a.data)
+    fp = fingerprint(a.data)
+    c = gfit.build_cache(splits["train"], a.data, a.cache, "train", fp)
+    fit_ = gfit.fit(splits["train"], c, seed=a.seed, val_fraction=a.val_fraction)
+    fit_["data_fingerprint"] = fp
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(a.out).write_text(json.dumps(gfit.to_plain(fit_), indent=2))
+    print(f"\nsaved {a.out}")
+
+
+def _print_split(table) -> None:
+    print("girths (wrap around the body):")
+    print(table.loc[[m for m in GIRTHS if m in table.index]].to_string())
+    print("lengths (run along the body):")
+    print(table.loc[[m for m in LENGTHS if m in table.index]].to_string())
 
 
 def _evaluate(a) -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     net, cfg, xs, ys, ck = checkpoint.load(a.ckpt, device)
-    if ck["data_fingerprint"] != fingerprint(a.data):
+    fp = ck["data_fingerprint"]
+    if fp != fingerprint(a.data):
         print("WARNING: data differs from the data this model was trained on")
     splits = load_all(a.data)
+    cache = a.cache or Path(a.ckpt).parent / "cache"
+    geo_fit = ck.get("geo_fit")
+    geo_cache = a.geo_cache or cache
+
+    def predict(df, split, name, rows_of=None):
+        imgs = cache_images(df, a.data, cache, name, cfg.img_h, cfg.img_w, fp)
+        geo, gtab = None, None
+        if geo_fit is not None:
+            geo, gtab = gfit.features_for(rows_of if rows_of is not None else df, df, a.data,
+                                          geo_cache, split, fp, geo_fit)
+        loader = DataLoader(SilhouetteSet(imgs, df, xs, ys, geo=geo), batch_size=cfg.batch_size)
+        return train_mod.predict(net, loader, ys, device), gtab
+
+    threshold = None
+    if geo_fit is not None and a.retake_share > 0:
+        _, val_df = split_by_person(splits["train"], cfg.val_fraction, cfg.seed)
+        tag = f"s{cfg.seed}v{cfg.val_fraction:g}"
+        vpred, vtab = predict(val_df, "train", f"val_{tag}", rows_of=splits["train"])
+        threshold = retake_threshold(disagreement(val_df, vtab, vpred), a.retake_share)
+        print(f"retake warning: fires when geometry and network differ by more than {threshold:.2f} cm "
+              f"(chosen on validation people to fire for {a.retake_share:.0%})")
+
     report = {}
     for t in a.test:
         df = splits[t]
-        imgs = cache_images(df, a.data, a.cache or Path(a.ckpt).parent / "cache", t,
-                            cfg.img_h, cfg.img_w, ck["data_fingerprint"])
-        loader = DataLoader(SilhouetteSet(imgs, df, xs, ys), batch_size=cfg.batch_size)
-        pred = train_mod.predict(net, loader, ys, device)
+        pred, gtab = predict(df, t, t)
         err = per_person_errors(df, pred)
         photo = summarise(err)
         base = baseline.run(splits["train"], df)
         table = base.add_prefix("baseline_").join(photo.add_prefix("photo_"))
+        if a.bootstrap:
+            table = table.join(bootstrap_ci(err, a.bootstrap).add_prefix("photo_"))
         print(f"\n== {t}: {len(err)} people (per person, averaged over their photos) ==")
-        print(table.to_string())
+        _print_split(table)
         spread = consistency(df, pred)
         if spread.isna().all():
             print("\nconsistency: not measurable — nobody in this split has 2+ photo pairs")
@@ -67,9 +132,20 @@ def _evaluate(a) -> None:
             print(spread.to_string())
         print("\n% within tolerance by sex and BMI band")
         print(by_group(df, err).to_string())
-        report[t] = table.reset_index().to_dict(orient="records")
+        entry = {"table": table.reset_index().to_dict(orient="records")}
+        if threshold is not None:
+            dis = disagreement(df, gtab, pred).loc[err.index]
+            flagged = dis > threshold
+            rr = retake_report(err, flagged)
+            print(f"\nretake warning on {t}: {flagged.mean():.0%} of people flagged")
+            print(rr.to_string())
+            print("\n% within tolerance by sex and BMI band, people NOT flagged")
+            print(by_group(df, err.loc[~flagged]).to_string())
+            entry["retake"] = {"threshold_cm": threshold, "flagged_share": float(flagged.mean()),
+                               "report": rr.reset_index().to_dict(orient="records")}
+        report[t] = entry
     out = Path(a.ckpt).parent / "eval_report.json"
-    out.write_text(json.dumps(report, indent=2))
+    out.write_text(json.dumps(gfit.to_plain(report), indent=2))
     print(f"\nsaved {out}")
 
 
@@ -91,15 +167,38 @@ def main(argv: list[str] | None = None) -> None:
     t.add_argument("--img-h", type=int, default=TrainConfig.img_h)
     t.add_argument("--img-w", type=int, default=TrainConfig.img_w)
     t.add_argument("--seed", type=int, default=TrainConfig.seed)
+    t.add_argument("--val-fraction", type=float, default=TrainConfig.val_fraction)
     t.add_argument("--workers", type=int, default=TrainConfig.num_workers)
     t.add_argument("--no-pretrained", action="store_true", help="for tests and offline runs")
+    t.add_argument("--loss", choices=["std", "cm"], default=TrainConfig.loss,
+                   help="std = run r1; cm = error in cm (S3b, D-017)")
+    t.add_argument("--geo-fit", default=None, help="geometry fit JSON from `anthro geometry-fit` (hybrid)")
+    t.add_argument("--geo-cache", default=None, help="where geometry caches live (default: --cache)")
     t.set_defaults(fn=_train)
+
+    g = sub.add_parser("geometry", help="S3b E0: measure width and depth on every photo pair")
+    g.add_argument("--data", required=True)
+    g.add_argument("--out", required=True, help="cache folder (e.g. on Drive)")
+    g.add_argument("--split", nargs="+", default=["train", "testA", "testB"])
+    g.set_defaults(fn=_geometry)
+
+    gf = sub.add_parser("geometry-fit", help="S3b E1-E2: tune levels and fit the ellipse correction")
+    gf.add_argument("--data", required=True)
+    gf.add_argument("--cache", required=True)
+    gf.add_argument("--out", required=True, help="where to write the fit JSON")
+    gf.add_argument("--seed", type=int, default=TrainConfig.seed)
+    gf.add_argument("--val-fraction", type=float, default=TrainConfig.val_fraction)
+    gf.set_defaults(fn=_geometry_fit)
 
     e = sub.add_parser("evaluate", help="score a trained model per person against the baseline")
     e.add_argument("--data", required=True)
     e.add_argument("--ckpt", required=True)
     e.add_argument("--cache", default=None)
     e.add_argument("--test", nargs="+", default=["testA", "testB"])
+    e.add_argument("--geo-cache", default=None)
+    e.add_argument("--bootstrap", type=int, default=0, help="95%% confidence intervals from N resamples")
+    e.add_argument("--retake-share", type=float, default=0.10,
+                   help="hybrid only: share of validation people the retake warning fires for (D-020)")
     e.set_defaults(fn=_evaluate)
 
     a = p.parse_args(argv)

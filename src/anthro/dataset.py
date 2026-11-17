@@ -11,6 +11,9 @@ Design decisions
 * 5 input channels: front, side, then height, weight and sex each spread over a whole
   channel. This follows BMnet, which concatenated height and weight as constant-valued
   channels so an image network can use them from its first layer.
+* S3b: an optional table of geometric features per photo pair (already standardised by
+  geometry_fit.feature_matrix). Every item is (input image stack, geometric features, targets);
+  without geometry the middle tensor is empty, so one training loop serves both networks.
 * Light augmentation (±3% shift and scale) teaches the model that small framing changes do
   not change the body. No flipping or rotation: a mirrored side view is a different pose,
   and rotation would undo the level-camera assumption.
@@ -77,9 +80,12 @@ def numeric_inputs(df: pd.DataFrame, x_scaler: Scaler) -> np.ndarray:
 
 class SilhouetteSet(Dataset):
     def __init__(self, images: np.ndarray, df: pd.DataFrame, x_scaler: Scaler, y_scaler: Scaler,
-                 augment: bool = False):
+                 augment: bool = False, geo: np.ndarray | None = None):
         assert len(images) == len(df), "images and table rows are out of step"
+        if geo is not None and len(geo) != len(df):
+            raise ValueError("geometric features and table rows are out of step")
         self.images = images
+        self.geo = geo
         self.num = numeric_inputs(df, x_scaler)
         self.y = y_scaler.encode(df[list(MEASUREMENTS)].to_numpy(np.float64)).astype(np.float32)
         self.augment = augment
@@ -93,7 +99,8 @@ class SilhouetteSet(Dataset):
             im = _jitter(im)
         _, h, w = im.shape
         num = torch.from_numpy(self.num[i])[:, None, None].expand(3, h, w)
-        return torch.cat([im, num], 0), torch.from_numpy(self.y[i])
+        g = torch.from_numpy(self.geo[i]) if self.geo is not None else torch.zeros(0)
+        return torch.cat([im, num], 0), g, torch.from_numpy(self.y[i])
 
 
 def _jitter(im: torch.Tensor, amount: float = 0.03) -> torch.Tensor:

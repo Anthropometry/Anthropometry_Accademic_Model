@@ -25,7 +25,8 @@ from .model import build
 
 
 def save(path: str | Path, net: torch.nn.Module, cfg: TrainConfig, x_scaler: Scaler,
-         y_scaler: Scaler, data_fp: str, extra: dict | None = None) -> None:
+         y_scaler: Scaler, data_fp: str, extra: dict | None = None,
+         geo_fit: dict | None = None) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     torch.save({
         "state_dict": net.state_dict(),
@@ -36,6 +37,9 @@ def save(path: str | Path, net: torch.nn.Module, cfg: TrainConfig, x_scaler: Sca
         "data_fingerprint": data_fp,
         "package_version": __version__,
         "extra": extra or {},
+        # S3b: the geometry fit (levels, correction, feature scaler) as plain values, so a hybrid
+        # model carries everything it needs and still loads with weights_only=True.
+        "geo_fit": geo_fit,
     }, path)
 
 
@@ -43,8 +47,8 @@ def load(path: str | Path, device: str = "cpu"):
     ck = torch.load(path, map_location=device, weights_only=True)
     if ck["measurements"] != list(MEASUREMENTS):
         raise ValueError("checkpoint was trained on a different measurement list")
-    cfg = TrainConfig(**ck["config"])
-    net = build(pretrained=False)          # weights come from the checkpoint, not the internet
+    cfg = TrainConfig(**ck["config"])     # settings added later take their defaults (r1 loads)
+    net = build(pretrained=False, n_geo=cfg.n_geo)   # weights come from the checkpoint, not the internet
     net.load_state_dict(ck["state_dict"])
     net.to(device).eval()
     return net, cfg, Scaler(**ck["x_scaler"]), Scaler(**ck["y_scaler"]), ck
