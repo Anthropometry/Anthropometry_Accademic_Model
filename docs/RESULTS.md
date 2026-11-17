@@ -49,6 +49,12 @@ Reading:
 - **Flaw found:** all three chosen levels were at the edge of the search grid, so the best levels
   were outside the grid. The grid has been widened and `geometry-fit` now warns on an edge choice;
   E1/E2 must be rerun before E4.
+- Second fit (wider grid): chest offset 0.08 (now inside the grid), waist band [0.39, 0.49], hip
+  [0.50, 0.53], still at an edge. E2 MAE: chest 4.21, waist 3.10, hip 3.04 cm. **Second flaw:**
+  levels were scored with a straight line on C0, not the correction used afterwards, so waist got
+  worse after correction (2.71 → 3.10 cm) though the ellipse alone improved (7.81 → 6.14 cm). Fixed:
+  levels are now scored with the full correction, and waist and hip also try fixed heights.
+  Third fit pending.
 
 ## S3/S4 — Photo model vs baseline, run r1
 

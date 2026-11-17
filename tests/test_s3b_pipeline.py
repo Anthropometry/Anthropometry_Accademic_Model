@@ -150,4 +150,4 @@ def test_bootstrap_intervals_contain_the_estimate():
 def test_edge_of_search_grid_is_detected():
     assert gfit._at_edge([0.0, 0.02, 0.04], 2) and not gfit._at_edge([0.0, 0.02, 0.04], 1)
     bands = [[0.3, 0.46], [0.33, 0.49], [0.36, 0.52]]
-    assert gfit._at_edge(bands, 0) and not gfit._at_edge(bands, 1)
+    assert gfit._at_edge(bands, 0) and gfit._at_edge(bands, 2) and not gfit._at_edge(bands, 1)
