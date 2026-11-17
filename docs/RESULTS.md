@@ -54,7 +54,26 @@ Reading:
   levels were scored with a straight line on C0, not the correction used afterwards, so waist got
   worse after correction (2.71 → 3.10 cm) though the ellipse alone improved (7.81 → 6.14 cm). Fixed:
   levels are now scored with the full correction, and waist and hip also try fixed heights.
-  Third fit pending.
+
+### E1 + E2, third fit (used for E4), 17 Nov 2026, commit 9f8e977
+
+Chosen levels: **chest at the armpit** (offset 0.0; the edge is physical: above the armpit the arms
+join the torso in the front photo), **waist = narrowest point between 36% and 49%** of body height,
+**hip = fixed height at 52%** (not the deepest point: BodyM's hip is a fixed SMPL loop).
+
+| Level | k range (true ÷ ellipse) | Ellipse alone MAE | Corrected MAE | Corrected % ±1.5 | Baseline MAE | Baseline % ±1.5 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| chest | 1.09–1.16 | 11.54 | 3.37 | 28.6 | 3.03 | 32.3 |
+| waist | 1.05–1.12 | 7.80 | **2.67** | **37.6** | 3.51 | 28.4 |
+| hip | 1.05–1.13 | 7.24 | 2.84 | 36.7 | 2.23 | 42.7 |
+
+Reading:
+- With the chest at the armpit, k no longer depends on body size (1.24 slim vs 1.04 heavy before),
+  so the earlier chest level was wrong for slim bodies.
+- Geometry alone beats height + weight + sex on the waist, nearly ties on the chest, loses on the
+  hip. Its value is tested in E4 (does it help the network?).
+- For S6: BodyM's hip is at a fixed height, not the fullest point. A Ghanaian tailor's hip may be
+  elsewhere; calibration must check the offset.
 
 ## S3/S4 — Photo model vs baseline, run r1
 

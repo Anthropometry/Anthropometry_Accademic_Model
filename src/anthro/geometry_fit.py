@@ -64,9 +64,9 @@ BODY_FEATURES = ("fullness", "edge_soft", "mask_px_height", "geo_ok")
 # 17 Nov, second fit: the hip kept choosing the narrowest band, i.e. a FIXED height matched BodyM
 # better than "deepest point in a band". Both waist and hip now also try fixed heights (a band one
 # sample row wide), from 0.30 to 0.64 of body height.
-_FIXED = [[round(f, 2), round(f + 0.002, 3)] for f in np.arange(0.30, 0.641, 0.02)]
+_FIXED = [[float(round(f, 2)), float(round(f + 0.002, 3))] for f in np.arange(0.30, 0.641, 0.02)]
 SEARCH = {
-    "chest": {"chest_offset": [round(x, 3) for x in np.arange(0.0, 0.181, 0.02)]},
+    "chest": {"chest_offset": [float(round(x, 3)) for x in np.arange(0.0, 0.181, 0.02)]},
     "waist": {"waist_band": [[lo, hi] for lo in (0.30, 0.33, 0.36, 0.39, 0.42)
                              for hi in (0.46, 0.49, 0.52, 0.55) if hi - lo >= 0.06] + _FIXED},
     "hip": {"hip_band": [[lo, hi] for lo in (0.47, 0.50, 0.53, 0.56)
