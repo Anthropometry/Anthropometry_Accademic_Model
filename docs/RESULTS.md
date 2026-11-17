@@ -116,6 +116,31 @@ sharper outlines don't show the shape between the front and side views. That is 
 geometry (E4). Women with BMI 35+: about 55% (8 people, unreliable alone, but a persistent gap).
 One seed per run: 1–2 point differences may be chance. **Decision: 512×256 for r4.**
 
+### E4: hybrid = r3 + geometric features (run r4), same 202 validation people (17 Nov 2026)
+
+25 geometric features per photo pair (third geometry fit). About 41 s per epoch; best epoch 25,
+val MAE 0.94 cm.
+
+| Measurement | r3 % ±1.5 | r4 % ±1.5 | r3 MAE | r4 MAE |
+| --- | ---: | ---: | ---: | ---: |
+| chest | 57.4 | 55.4 | 1.69 | **1.65** |
+| waist | 52.5 | **54.0** | 1.98 | **1.87** |
+| hip | 60.4 | **65.3** | 1.43 | **1.41** (p90 2.70 → 2.97) |
+| thigh | 78.2 | 81.2 | 1.09 | 0.99 |
+| calf | 88.1 | 83.7 | 0.81 | 0.82 |
+| leg-length | 82.2 | 78.2 | 0.94 | 0.93 |
+| **mean of 14** | 82.3 | 82.1 | 0.95 | 0.94 |
+
+Reading: a small gain where the geometry was aimed (hip +5 points; waist −0.11 cm, the first
+waist movement since the cm loss; chest MAE −0.04 cm), none overall. Calf and leg length, which the
+geometry does not touch, moved −4 points: a measure of run-to-run chance with one seed. The network
+already sees the outline at 512 px, so explicit width and depth add only a little independent
+information.
+
+**Choice for the final test (rule fixed beforehand: validation chest, waist, hip): r4**, narrowly:
+lower MAE on all three, higher combined % (174.8 vs 170.3), equal overall, and it carries the
+retake warning. Seeds were not repeated; whether r4's edge over r3 is real is untested.
+
 ## S3/S4 — Photo model vs baseline, run r1
 
 Run 15 Nov 2026, Google Colab T4, commit `5f3543e`, data fingerprint `d9d4893ed2e13c7b`,
