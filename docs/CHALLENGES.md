@@ -4,6 +4,7 @@ Problems met while building, what caused them and what fixed them. Newest first.
 
 | Date | Challenge | Cause | Fix | Where |
 | --- | --- | --- | --- | --- |
+| 19 Nov 2026 | A notebook rerun retrained r4 and overwrote the first r4 model | "Run all" reruns training cells; `anthro train` writes into an existing run folder | Second run recorded as run-to-run variation; proposed: training refuses an existing run folder unless told to overwrite | notebooks/, docs/RESULTS.md |
 | 17 Nov 2026 | Waist improved as an ellipse but got worse after correction; hip still at an edge | Levels were scored with a straight line on C0, not the correction used afterwards; hip matched a fixed height better than "deepest point" | Score levels with the full correction; waist and hip also try fixed heights | src/anthro/geometry_fit.py |
 | 17 Nov 2026 | Level search chose the edge of its grid for chest, waist and hip | Grid set from textbook proportions; BodyM's levels (SMPL vertex loops) sit elsewhere | Wider grid; `geometry-fit` warns when a choice is at the edge | src/anthro/geometry_fit.py |
 | 17 Nov 2026 | Choosing between runs needed per-measurement scores | Training logged only the overall validation error, so chest/waist could only be compared on Test-A/B (dishonest) | Training prints and saves per-measurement validation scores at the best epoch | src/anthro/train.py |

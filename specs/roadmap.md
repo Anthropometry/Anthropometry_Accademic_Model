@@ -39,6 +39,12 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [ ] Proposed next: capture-variation augmentation + repeat seeds (needs a spec)
 - Execution prompt: specs/s3b-geometric-girth/execute-prompt.md
 
+## S3c Shape check (superellipse) — done 19 Nov 2026
+
+- [x] Spec approved (specs/s3c-shape-check/spec.md, D-023)
+- [x] `anthro geometry-shape`: k vs D/W and front/back; oval × k vs + front/back vs superellipse
+- [x] Real run on BodyM (19 Nov): superellipse tested, no gain; oval × k stays (RESULTS.md)
+
 ## S4 Compare photo model vs baseline
 
 - [x] Per measurement: MAE and % within ±1.5 cm, baseline vs photo, Test-A and Test-B

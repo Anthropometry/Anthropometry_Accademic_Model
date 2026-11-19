@@ -5,6 +5,7 @@ Each entry: ID, date, topic, decision, why, files changed. Only Ryan makes or ch
 
 | ID | Date | Topic | Decision | Why | Changed |
 | --- | --- | --- | --- | --- | --- |
+| D-023 | 19 Nov 2026 | Superellipse check | **Approved by Ryan:** run the shape check from the S3b spec: does the oval's error follow D/W or the front/back balance, and does a front/back term or a superellipse (n learned per person) beat the current k correction? Diagnostic only | The S3b spec made a richer shape conditional on this check, which was never run | specs/s3c-shape-check/, src/anthro/geometry_shape.py |
 | D-022 | 17 Nov 2026 | Repository layout | **Approved by Ryan (requested):** spec-driven layout: `specs/` holds mission.md, roadmap.md, tech-stack.md, policy.md, discussions.md and one subfolder per feature spec (`specs/<step>/spec.md`); README.md stays the human entry point | Course best practice; one place for what, why and how | specs/, README.md, CLAUDE.md |
 | D-021 | 17 Nov 2026 | Test coverage | **Approved by Ryan (requested):** add pytest-cov (dev only); CI reports coverage and fails below 80% | Industry practice is 70–80%; coverage was ~97% but unmeasured | pyproject.toml, ci.yml |
 | D-020 | 17 Nov 2026 | Retake flag share | **Approved by Ryan:** the "retake photo" flag fires for about 10% of people, threshold chosen on validation | Removes the worst predictions without refusing many people; Ryan sets the share | specs/s3b-geometric-girth/spec.md |
