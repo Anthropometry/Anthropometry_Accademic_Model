@@ -45,6 +45,7 @@ anthro train    --data bodym --out runs/r1 --cache DIR    # step 3 (GPU)
 anthro evaluate --data bodym --ckpt runs/r1/best.pt       # steps 3–4 (--test val: validation people)
 anthro geometry     --data bodym --out GEO                # S3b geometry cache
 anthro geometry-fit --data bodym --cache GEO --out FIT    # S3b levels + correction
+anthro geometry-shape --data bodym --cache GEO --fit FIT  # S3c superellipse check
 ```
 
 ## Reporting

@@ -7,6 +7,7 @@
     anthro geometry-fit --data bodym --cache GEO_CACHE --out geo_fit.json  (S3b, E1-E2)
     anthro train ... --loss cm [--geo-fit geo_fit.json --geo-cache GEO_CACHE]
     anthro evaluate ... [--geo-cache GEO_CACHE] [--bootstrap 1000] [--retake-share 0.10]
+    anthro geometry-shape --data bodym --cache GEO_CACHE --fit geo_fit.json     (S3c shape check)
 
 Why a CLI rather than logic in notebooks: notebooks are hard to review in a pull request and
 easy to run out of order. Notebooks here only call these commands, so what the supervisor
@@ -22,7 +23,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 
-from . import baseline, checkpoint
+from . import baseline, checkpoint, geometry_shape
 from . import geometry_fit as gfit
 from . import train as train_mod
 from .config import GIRTHS, LENGTHS, TrainConfig
@@ -74,6 +75,19 @@ def _geometry_fit(a) -> None:
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(gfit.to_plain(fit_), indent=2))
     print(f"\nsaved {a.out}")
+
+
+def _geometry_shape(a) -> None:
+    splits = load_all(a.data)
+    fp = fingerprint(a.data)
+    fit_ = json.loads(Path(a.fit).read_text())
+    if fit_.get("data_fingerprint") not in (None, fp):
+        raise SystemExit("this geometry fit was made on different data: rerun `anthro geometry-fit`")
+    c = gfit.build_cache(splits["train"], a.data, a.cache, "train", fp)
+    report = geometry_shape.run(splits["train"], c, fit_)
+    out = Path(a.fit).with_name("geo_shape_report.json")
+    out.write_text(json.dumps(gfit.to_plain(report), indent=2))
+    print(f"\nsaved {out}")
 
 
 def _print_split(table) -> None:
@@ -198,6 +212,12 @@ def main(argv: list[str] | None = None) -> None:
     gf.add_argument("--seed", type=int, default=TrainConfig.seed)
     gf.add_argument("--val-fraction", type=float, default=TrainConfig.val_fraction)
     gf.set_defaults(fn=_geometry_fit)
+
+    gs = sub.add_parser("geometry-shape", help="S3c: does a superellipse or front/back term beat the oval?")
+    gs.add_argument("--data", required=True)
+    gs.add_argument("--cache", required=True, help="geometry cache folder from `anthro geometry`")
+    gs.add_argument("--fit", required=True, help="geo_fit.json from `anthro geometry-fit`")
+    gs.set_defaults(fn=_geometry_shape)
 
     e = sub.add_parser("evaluate", help="score a trained model per person against the baseline")
     e.add_argument("--data", required=True)
