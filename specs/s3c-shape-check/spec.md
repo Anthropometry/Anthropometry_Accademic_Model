@@ -1,6 +1,6 @@
 # S3c: Shape check: does a superellipse or a front/back term beat the oval correction?
 
-**Status:** approved by Ryan, 19 Nov 2026 (D-023)
+**Status:** approved by Ryan, 19 Nov 2026 (D-023) — run 19 Nov: no gain, oval × k stays (verified)
 **Branch:** `s3c-shape-check` (stacked on `repo-structure`, PR #3)
 
 ## Goal (one sentence)
