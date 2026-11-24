@@ -52,9 +52,9 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [ ] Lengths and girths reported separately
 - [x] Consistency across a person's photos
 
-## S7-0 Foundation for the full measurement set and our own data — spec drafted 24 Nov 2026, waiting for Ryan
+## S7-0 Foundation for the full measurement set and our own data — spec approved 24 Nov 2026, building
 
-- [ ] Spec approved (specs/s7-0-foundation/spec.md)
+- [x] Spec approved (specs/s7-0-foundation/spec.md)
 - [ ] Catalogue from the app's codes; output format anthro-output/1; suppliers + routing; export loader
 
 ## Next after S7-0

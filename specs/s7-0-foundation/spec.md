@@ -1,6 +1,6 @@
 # S7-0: Foundation for the full measurement set and our own data
 
-**Status:** draft, 24 Nov 2026. Waiting for Ryan's approval.
+**Status:** approved by Ryan, 24 Nov 2026 (missing weight: typical weight with a warning, D-027; errors from Test-B, D-028)
 **Branch:** `s7-0-foundation` (stacked on `s3c-shape-check`, PR #4)
 
 ## Goal (one sentence)
@@ -194,13 +194,19 @@ figures in the output.
 | Catalogue: 25 codes; women 24, men 18; matches the app's rules | allow |
 | BodyM → codes mapping covers the 14 and marks matches | allow |
 | Output JSON has exactly the person's set and validates against the schema | allow |
-| Missing weight → still predicts with a warning (photo model needs weight: falls back to `not_available` for weight-dependent codes, or refuses; see question 2) | allow / refuse |
+| Missing weight → typical weight for height and sex, warning, values marked `weight_assumed` (D-027) | allow |
 | Under-18 age range | refuse |
 | Routing change switches the supplier | allow |
 | Fake export loads; readings and both weights kept | allow |
 | Unknown format, missing column, practice row without the flag | refuse |
 
-## Open questions for Ryan
+## Ryan's answers (24 Nov 2026)
+
+1. Approved.
+2. Missing weight: use a typical weight for height and sex (straight-line fit per sex on BodyM training people), with a warning and a `weight_assumed` mark on affected values (D-027).
+3. Errors: Test-B (D-028).
+
+## Questions as asked
 
 1. Approve this foundation (catalogue from the app's codes, `anthro-output/1`, suppliers and routing,
    export loader)?
