@@ -52,7 +52,19 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [ ] Lengths and girths reported separately
 - [x] Consistency across a person's photos
 
-## S5 SMPL-X extras
+## S7-0 Foundation for the full measurement set and our own data — spec approved 24 Nov 2026, building
+
+- [x] Spec approved (specs/s7-0-foundation/spec.md)
+- [ ] Catalogue from the app's codes; output format anthro-output/1; suppliers + routing; export loader
+
+## Next after S7-0
+
+- S7a predict pipeline: photo → silhouette → measurements (needs a segmentation model: new dependency)
+- S5a ANSUR II supplier (D-024; licence check first)
+- S5b outline-geometry supplier for rough estimates (high hip, knee, under-bust, front length)
+- S8 train on the app's data (missing values allowed, both weights, clothing)
+
+## S5 SMPL-X extras — set aside (D-026, 24 Nov 2026)
 
 - [ ] Fit SMPL-X shape to the predicted (or corrected) measurements + height + weight
 - [ ] Virtual tape for neck, armhole, back length, rise; inconsistency flag when no plausible body fits
