@@ -72,10 +72,34 @@ is why routing already lists `ansur` before `photo_model` for it.
 5. **Where formulas live:** `anthro ansur-fit` writes `ansur_formulas.json` (coefficients, inputs, errors,
    ANSUR file fingerprints, catalogue version). Prediction reads it with `--ansur FILE`.
 
+## Mix test for chest/bust and waist (Ryan, 25 Nov 2026: "mix that, so that we can decide from the data")
+
+The photo model struggles most with the big girths. ANSUR can't replace it (no photos: two people of the
+same height and weight but different shapes look identical to it), but a mix of two estimates that make
+different mistakes can beat either. Decided from data:
+
+1. ANSUR **basic** formulas (height, weight, BMI, per sex) for `chestcircumference` and `waistcircumference`.
+2. Apply them to BodyM's 202 **validation people** (they have height, weight, sex), next to r4's predictions.
+3. Fit the mix on validation people: BodyM value = a + b × photo model + c × ANSUR + d × male. The intercept
+   and weights also absorb the definition gaps (ANSUR's waist is at the navel; BodyM's is a virtual tape).
+4. Judge it on validation people with a 5-fold split by person (never fit and score on the same people):
+   keep the mix for a measurement only if it beats the photo model alone on % within ±1.5 cm and on average
+   error. Otherwise routing keeps the photo model, and that result is recorded.
+5. If kept, score once on Test-B, next to the photo model alone. Honest note: Test-B was already used for
+   r4; this is a second look, decided beforehand on validation people only.
+6. A kept mix becomes supplier `mix` in routing for `bust_girth` / `chest_girth` and `waist_girth`;
+   `expected_error_cm` comes from its Test-B score.
+
+Hip is not in the mix: the app's hip (fullest part) comes from ANSUR's `buttockcircumference` directly,
+which already matches the app's definition, while BodyM's hip is at a fixed height.
+
+Also kept for later (not built now): a large photo-model vs ANSUR disagreement as a second retake signal.
+
 ## Commands
 
 ```bash
 anthro ansur-fit --ansur DRIVE/ansur2 --report runs/r4/eval_report.json --out ansur_formulas.json
+anthro ansur-mix --data bodym --ckpt runs/r4/best.pt --formulas ansur_formulas.json   # adds the mix, if it wins
 anthro predict-silhouettes ... --ansur ansur_formulas.json
 ```
 
@@ -90,6 +114,8 @@ Notebook `notebooks/05_s5a_ansur.ipynb`: check headers, fit, print the scores, r
 - [ ] With `--ansur`, a woman's result has the 9 codes above as `derived` (7 for a man), with
       `expected_error_cm` and `definition_match`; without it, unchanged from S7-0.
 - [ ] `weight_assumed` is carried onto derived values that used the weight.
+- [ ] Mix test: fitted and judged on validation people only (5-fold by person); kept per measurement only if
+      it beats the photo model alone; the decision and both scores are printed and saved.
 - [ ] No ANSUR rows, only coefficients and summary errors, are written anywhere in the repository.
 - [ ] Tests on a generated fake ANSUR; coverage stays ≥ 80%.
 
@@ -126,6 +152,8 @@ unblurred). Lengths and girths separate. These numbers come from Ryan's Colab ru
 | Woman gets 9 derived codes, man 7; values in plausible ranges | allow |
 | Derived values carry `weight_assumed` when weight was assumed | allow |
 | Repository path given as the ANSUR folder | refuse |
+| Mix is fitted and scored on different people (folds by person) | allow |
+| Mix that loses on validation is not routed | allow |
 
 ## Open questions for Ryan
 
@@ -135,5 +163,5 @@ unblurred). Lengths and girths separate. These numbers come from Ryan's Colab ru
 3. **Shoulder to knee:** ANSUR has no "side of the neck" height, so the formula measures from the shoulder
    point (a little lower, so the result would be a little short). Accept as `differs`, or leave shoulder to
    knee `not_available` until your tape data exists?
-4. **Formula file:** commit `ansur_formulas.json` into the package after your run (coefficients only, from
-   public data; then the demo works without the ANSUR files), or keep it on Drive only?
+4. ~~Formula file~~ **Answered (25 Nov):** after Ryan's Colab run, `ansur_formulas.json` is committed into the
+   package (coefficients and summary errors only), so the demo works without the ANSUR files.
