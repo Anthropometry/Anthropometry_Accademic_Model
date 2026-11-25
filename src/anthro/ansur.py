@@ -84,9 +84,27 @@ def needed_columns() -> set[str]:
 
 def fingerprint(folder: str | Path) -> str:
     h = hashlib.sha256()
-    for name in sorted(FILES.values()):
-        h.update((Path(folder) / name).read_bytes())
+    for sex in sorted(FILES):
+        h.update(find_file(Path(folder), sex).read_bytes())
     return h.hexdigest()[:16]
+
+
+def _norm(name: str) -> str:
+    return " ".join(name.lower().replace("_", " ").replace("-", " ").split())
+
+
+def find_file(folder: Path, sex: str) -> Path:
+    """The public file for this sex, accepting the usual download variants: case, underscores or dashes
+    for spaces, and a .zip holding the .csv (pandas reads a one-file zip directly)."""
+    want = _norm(FILES[sex])                                  # "ansur ii male public.csv"
+    stem = want.removesuffix(".csv")
+    ok = (want, stem + ".zip", stem + ".csv.zip")
+    hits = [p for p in folder.iterdir() if p.is_file() and _norm(p.name) in ok] if folder.is_dir() else []
+    if not hits:
+        here = sorted(p.name for p in folder.iterdir()) if folder.is_dir() else []
+        holds = f"The folder holds: {', '.join(here)}" if here else "The folder is empty or missing."
+        raise AnsurError(f"{FILES[sex]} not found in {folder}. {holds}")
+    return hits[0]
 
 
 def load(folder: str | Path) -> pd.DataFrame:
@@ -97,9 +115,7 @@ def load(folder: str | Path) -> pd.DataFrame:
         raise AnsurError("ANSUR files must stay outside the repository (keep them on Drive)")
     frames = []
     for sex, name in FILES.items():
-        p = folder / name
-        if not p.exists():
-            raise AnsurError(f"{name} not found in {folder.name}")
+        p = find_file(folder, sex)
         try:
             df = pd.read_csv(p)
         except UnicodeDecodeError:            # the public female file is not UTF-8

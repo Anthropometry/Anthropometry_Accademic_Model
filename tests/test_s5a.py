@@ -73,6 +73,21 @@ def test_a_folder_inside_the_repository_is_refused():
         ansur.load(ansur.Path(__file__).resolve().parents[1] / "data")
 
 
+def test_usual_download_names_are_accepted_and_a_miss_lists_the_folder(tmp_path):
+    import zipfile
+    f = make_fake_ansur(tmp_path / "a")
+    male = f / ansur.FILES["male"]
+    male.rename(f / "ANSUR_II_MALE_Public.csv")
+    female = f / ansur.FILES["female"]
+    with zipfile.ZipFile(f / "ANSUR II FEMALE Public.zip", "w") as z:
+        z.write(female, female.name)
+    female.unlink()
+    assert len(ansur.load(f)) == 500
+    (f / "ANSUR_II_MALE_Public.csv").rename(f / "men.csv")
+    with pytest.raises(ansur.AnsurError, match="men.csv"):
+        ansur.load(f)
+
+
 def test_duplicate_subject_is_refused(tmp_path):
     f = make_fake_ansur(tmp_path / "a")
     p = f / ansur.FILES["male"]
