@@ -305,8 +305,9 @@ def test_leg_formula_uses_the_photo_models_leg_length(table):
     assert long_["inseam"].value_cm > short + 5
 
 
-def test_black_fitted_alternative_is_stored_but_off_until_ryan_decides(table, formulas):
+def test_black_fitted_alternative_is_used_only_when_switched_on_and_kept(table, formulas):
     doc = json.loads(json.dumps(formulas[0]))
+    doc["prefer_black_fitted"] = False
     alt, t = ansur.black_fitted(table, doc, NOISE)
     assert set(alt) == set(ansur.BLACK_FIT_CODES) and set(alt["inseam"]) == {"female", "male"}
     assert {"general, on Black participants", "Black-fitted, on Black participants"} <= set(t["formula"])
@@ -329,7 +330,7 @@ def test_cli_fit_runs_the_leg_check_and_f2(run, fake_ansur, tmp_path, capsys):
     text = capsys.readouterr().out
     assert "F1 leg check" in text and "F2" in text and "pct_within_3" in text
     doc = ansur.load_formulas(out)
-    assert doc["leg_check"] is not None and doc["prefer_black_fitted"] is False
+    assert doc["leg_check"] is not None and doc["prefer_black_fitted"] is True      # D-032
 
 
 def test_evaluate_reports_the_tolerance_view(run):

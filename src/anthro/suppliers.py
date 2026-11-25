@@ -150,6 +150,22 @@ class Mix:
         return out
 
 
+class Geometry:
+    """S5b: rough outline estimates (geometry_rough) for under-bust, high hip and knee; no error (D-034)."""
+
+    name = "geometry"
+    FLAGS = {"underbust_girth": "outline_below_chest", "high_hip_girth": "outline_between_waist_and_hip",
+             "knee_girth": "outline_knee_one_leg"}
+
+    def __init__(self, rough: dict[str, tuple[float | None, str]]):
+        self.rough = rough
+
+    def estimate(self, ctx: Context) -> dict[str, Estimate]:
+        return {code: Estimate(v, self.name, "rough", "presumed", None, None,
+                               [*ctx.flags, self.FLAGS.get(code, "outline")])
+                for code, (v, _why) in self.rough.items() if v is not None}
+
+
 def load_routing(path: str | Path | None = None) -> dict[str, list[str]]:
     text = (Path(path).read_text(encoding="utf-8") if path else
             resources.files("anthro").joinpath("data/routing_default.json").read_text(encoding="utf-8"))

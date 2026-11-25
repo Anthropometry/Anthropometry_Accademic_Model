@@ -1,6 +1,7 @@
 # S5b: rough estimates for the last four measurements (under-bust, front length, high hip, knee)
 
-**Status:** draft, 25 Nov 2026. Waiting for Ryan's approval.
+**Status:** approved by Ryan, 25 Nov 2026 (seated front length accepted as `differs`, D-033; rough values
+show no error until tape data exists, D-034)
 **Branch:** `s5b-geometry-rough` (on top of `s5a-ansur`)
 
 ## Goal (one sentence)
@@ -81,13 +82,19 @@ anthro geometry-rough --data bodym --ckpt runs/r4/best.pt   # plausibility, orde
 
 ## Acceptance criteria (testable)
 
-- [ ] Candidate ANSUR columns printed; any accepted column fitted and scored as in S5a.
-- [ ] Geometry gives under-bust, high hip and knee girth (and front length if ANSUR can't) from a silhouette
+Built 25 Nov 2026 (tests/test_s5b.py). Front length: ANSUR `waistfrontlengthsitting`, used only if the column
+exists. Under-bust 4.5% of height below the chest level; knee height from ANSUR (textbook 0.285 until refit).
+
+
+- [x] Candidate ANSUR columns printed; any accepted column fitted and scored as in S5a.
+- [x] Geometry gives under-bust, high hip and knee girth (and front length if ANSUR can't) from a silhouette
       pair, each `rough` with `expected_error_cm: null` and a method flag.
-- [ ] Values outside the catalogue's adult range, or out of order, become `not_available` or are flagged.
+- [x] Values outside the catalogue's adult range, or out of order, become `not_available` or are flagged.
 - [ ] Women get 22 of 24 rows filled, men 18 of 18, on a pair the outline can measure.
-- [ ] Tests on fake silhouettes with known widths (the ellipse and the edge-length maths checked by hand).
-- [ ] Coverage stays ≥ 80%.
+- [x] Tests on fake silhouettes with known widths (the ellipse and the edge-length maths checked by hand).
+- [x] Coverage stays ≥ 80%.
+
+- [ ] Ryan runs notebooks/06_s5b_rough.ipynb; the new formula file is committed.
 
 ## How it is scored
 
@@ -115,7 +122,12 @@ error. Reported: spread on validation people and the share of people each code c
 | Under-bust above bust, or high hip outside waist–hip | flagged |
 | Merged legs at knee height | not_available |
 
-## Open questions for Ryan
+## Ryan's answers (25 Nov 2026)
+
+1. Approved. 2. ANSUR's seated front length accepted, marked `differs` (D-033). 3. Rough values show no ± error
+until tape data exists (D-034).
+
+## Questions as asked
 
 1. **Approve S5b as written?**
 2. **Seated front length:** if ANSUR's only front length is measured sitting, accept it as `differs`, or use

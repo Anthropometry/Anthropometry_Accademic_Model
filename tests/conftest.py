@@ -65,7 +65,7 @@ def make_hybrid_run(tmp):
             "side": data / "testB" / "mask_left" / f"{pid}.png"}
 
 
-def make_fake_ansur(folder, n=(300, 200), seed=0):
+def make_fake_ansur(folder, n=(300, 200), seed=0, front=False):
     """Two fake ANSUR II files with the real column names (mixed case as in the public files), mm and
     tenths of a kg. Values are invented: plausible sizes driven by height and weight, plus noise."""
     from anthro import ansur
@@ -91,6 +91,8 @@ def make_fake_ansur(folder, n=(300, 200), seed=0):
             "biacromialbreadth": L(0.23), "thighcircumference": g(600), "calfcircumference": g(380),
             "wristcircumference": g(170),
         })
+        if front:                                    # S5b: ANSUR's seated front length (optional column)
+            cols["waistfrontlengthsitting"] = L(0.25)
         cols.update({"subjectid": np.arange(start, start + k), "gender": sex.capitalize(),
                      "dodrace": rng.choice([1, 2, 3], k, p=[0.6, 0.3, 0.1]), "stature": h, "weightkg": w,
                      "heightin": h / 25.4 + rng.normal(0, 0.5, k),

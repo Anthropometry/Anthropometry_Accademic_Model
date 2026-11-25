@@ -13,6 +13,8 @@
     anthro read-export --folder anthro-export-YYYY-MM-DD-HH-MM [--include-practice]     (S7-0)
     anthro ansur-fit --ansur DRIVE/ansur2 --report runs/r4/eval_report.json --out ansur_formulas.json (S5a)
     anthro ansur-mix --data bodym --ckpt runs/r4/best.pt --formulas ansur_formulas.json             (S5a)
+    anthro ansur-columns --ansur DRIVE/ansur2                                                        (S5b)
+    anthro geometry-rough --data bodym --ckpt runs/r4/best.pt                                        (S5b)
 
 Why a CLI rather than logic in notebooks: notebooks are hard to review in a pull request and
 easy to run out of order. Notebooks here only call these commands, so what the supervisor
@@ -226,7 +228,7 @@ def _ansur_fit(a) -> None:
         doc["black_fitted"], bt = ansur.black_fitted(df, doc, noise)
         print("\n== F2: inseam and hip fitted on Black participants only, judged on Black participants ==")
         print(bt.to_string(index=False))
-        print("(kept = better on both MAE and % within ±1.5; not switched on until Ryan decides)")
+        print("(kept = better on both MAE and % within ±1.5; kept ones are used, D-032)")
         print("\n== cost of a stated height and weight (basic formula, ANSUR's self-reported values) ==")
         print(ansur.self_report_check(df).to_string(index=False))
     Path(a.out).write_text(json.dumps(doc, indent=2) + "\n")
@@ -280,6 +282,32 @@ def _ansur_mix(a) -> None:
     doc["mix"] = mix
     Path(a.formulas).write_text(json.dumps(doc, indent=2) + "\n")
     print(f"\nsaved the mix decision into {a.formulas}")
+
+
+def _ansur_columns(a) -> None:
+    from . import ansur
+    with pd.option_context("display.max_rows", 200, "display.width", 160):
+        print(ansur.candidate_columns(a.ansur).to_string(index=False))
+    print("\nOnly names, counts and medians are printed; check each definition in the ANSUR II report.")
+
+
+def _geometry_rough(a) -> None:
+    from . import geometry_rough
+    from .predict import load_ansur
+    _, cfg, _, _, ck = checkpoint.load(a.ckpt, "cpu")
+    if ck.get("geo_fit") is None:
+        raise SystemExit("refused: this checkpoint has no geometry fit (use a hybrid run such as r4)")
+    formulas = load_ansur(a.formulas)
+    ratio = ((formulas or {}).get("level_ratios") or {}).get("knee_from_floor",
+                                                             geometry_rough.KNEE_FROM_FLOOR_TEXTBOOK)
+    _, val_df = split_by_person(load_all(a.data)["train"], cfg.val_fraction, cfg.seed)
+    spread, share = geometry_rough.summarise_people(val_df, a.data, ck["geo_fit"], ratio)
+    print(f"== S5b rough outline estimates on {val_df.subject_id.nunique()} validation people "
+          f"(knee height {ratio:.3f} of stature) ==")
+    print(spread.to_string())
+    print("\n% of people each code could be measured for, by sex and BMI band")
+    print(share.to_string())
+    print("\nNo errors: these measurements have no photo-paired tape values anywhere yet (D-034).")
 
 
 def _read_export(a) -> None:
@@ -391,6 +419,16 @@ def main(argv: list[str] | None = None) -> None:
     am.add_argument("--cache", default=None)
     am.add_argument("--geo-cache", default=None)
     am.set_defaults(fn=_ansur_mix)
+
+    ac = sub.add_parser("ansur-columns", help="S5b: ANSUR columns that may match the last app codes")
+    ac.add_argument("--ansur", required=True)
+    ac.set_defaults(fn=_ansur_columns)
+
+    gr = sub.add_parser("geometry-rough", help="S5b: rough outline estimates on validation people")
+    gr.add_argument("--data", required=True)
+    gr.add_argument("--ckpt", required=True)
+    gr.add_argument("--formulas", default=None, help="ANSUR formula file (knee height); default: packaged")
+    gr.set_defaults(fn=_geometry_rough)
 
     rx = sub.add_parser("read-export", help="S7-0: check and summarise an AnthropometryDC export folder")
     rx.add_argument("--folder", required=True)
