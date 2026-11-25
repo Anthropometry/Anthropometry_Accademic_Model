@@ -154,18 +154,24 @@ or storage (policy).
 
 ## Acceptance criteria (testable)
 
-- [ ] `catalog/measurements.json` holds the 25 codes exactly as the app; generated sets are 24 (women)
+Built 25 Nov 2026 (tests/test_s7_0.py). File locations changed from this spec's first draft: the
+catalogue, schema and routing live in `src/anthro/data/` (`measurements.json`,
+`anthro-output-1.schema.json`, `routing_default.json`) so they install with the package on Colab;
+`scripts/sync_catalog.py` refreshes the catalogue from the app.
+
+- [x] `catalog/measurements.json` holds the 25 codes exactly as the app; generated sets are 24 (women)
       and 18 (men); a test compares them with the app's rules.
-- [ ] `anthro predict-silhouettes --front F --side S --height H [--weight W] --sex female --age-range 25-34 --ckpt C`
+- [x] `anthro predict-silhouettes --front F --side S --height H [--weight W] --sex female --age-range 25-34 --ckpt C`
       writes one `anthro-output/1` JSON with every code of the person's set: photo-model codes filled,
       the others `not_available`.
-- [ ] The output validates against a JSON schema file kept in the repo (`schemas/anthro-output-1.json`).
-- [ ] `expected_error_cm` is filled only from an evaluation report; `null` otherwise.
-- [ ] Under-18 age ranges are refused.
-- [ ] Changing `routing/default.json` changes which supplier fills a code, with no code change (test).
-- [ ] The export loader reads a fake export into the internal table; refuses unknown format versions,
+- [x] The output validates against a JSON schema file kept in the repo (`schemas/anthro-output-1.json`).
+- [x] `expected_error_cm` is filled only from an evaluation report; `null` otherwise.
+- [x] Under-18 age ranges are refused.
+- [x] Changing `routing/default.json` changes which supplier fills a code, with no code change (test).
+- [x] The export loader reads a fake export into the internal table; refuses unknown format versions,
       missing columns and practice rows (unless asked).
-- [ ] r1–r4 behaviour, tests and results unchanged; coverage stays ≥ 80%.
+- [x] r1–r4 behaviour, tests and results unchanged; coverage stays ≥ 80% (98%).
+- [ ] Ryan runs notebooks/04_s7_predict.ipynb with r4 on one Test-B woman and man (first real check).
 
 ## How it is scored
 

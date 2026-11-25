@@ -8,6 +8,9 @@
     anthro train ... --loss cm [--geo-fit geo_fit.json --geo-cache GEO_CACHE]
     anthro evaluate ... [--geo-cache GEO_CACHE] [--bootstrap 1000] [--retake-share 0.10]
     anthro geometry-shape --data bodym --cache GEO_CACHE --fit geo_fit.json     (S3c shape check)
+    anthro predict-silhouettes --front F --side S --height H [--weight W] --sex female
+                               --age-range 25-34 --ckpt runs/r4/best.pt [--out result.json]  (S7-0)
+    anthro read-export --folder anthro-export-YYYY-MM-DD-HH-MM [--include-practice]     (S7-0)
 
 Why a CLI rather than logic in notebooks: notebooks are hard to review in a pull request and
 easy to run out of order. Notebooks here only call these commands, so what the supervisor
@@ -23,7 +26,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 
-from . import baseline, checkpoint, geometry_shape
+from . import baseline, catalog, checkpoint, geometry_shape
 from . import geometry_fit as gfit
 from . import train as train_mod
 from .config import GIRTHS, LENGTHS, TrainConfig
@@ -172,6 +175,37 @@ def _evaluate(a) -> None:
     print(f"\nsaved {out}")
 
 
+def _predict_silhouettes(a) -> None:
+    from . import predict
+    try:
+        doc = predict.predict(a.front, a.side, a.height, a.sex, a.ckpt, weight_kg=a.weight,
+                              age_range=a.age_range, height_kind=a.height_kind, clothing=a.clothing,
+                              data_root=a.data, report_path=a.report, routing_path=a.routing,
+                              weight_kind=a.weight_kind)
+    except (predict.PredictError, ValueError) as e:
+        raise SystemExit(f"refused: {e}") from e
+    print(predict.to_text(doc))
+    if a.out:
+        Path(a.out).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+        print(f"\nsaved {a.out}")
+
+
+def _read_export(a) -> None:
+    from . import export_loader
+    try:
+        ex = export_loader.load(a.folder, include_practice=a.include_practice)
+    except export_loader.ExportError as e:
+        raise SystemExit(f"refused: {e}") from e
+    codes = [c for c in catalog.by_code() if c in ex.people.columns]
+    print(f"format {ex.format} | {len(ex.people)} participants | {len(ex.photos)} photos")
+    for n in ex.warnings:
+        print(f"note: {n}")
+    # Counts only: no values or ids are printed, so logs and saved notebook outputs stay anonymous.
+    filled = ex.people[codes].notna().sum()
+    print("measurements filled (participants):")
+    print(filled.to_string())
+
+
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="anthro")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -230,6 +264,29 @@ def main(argv: list[str] | None = None) -> None:
     e.add_argument("--retake-share", type=float, default=0.10,
                    help="hybrid only: share of validation people the retake warning fires for (D-020)")
     e.set_defaults(fn=_evaluate)
+
+    pr = sub.add_parser("predict-silhouettes",
+                        help="S7-0: one adult's full measurement set from two silhouettes")
+    pr.add_argument("--front", required=True, help="front silhouette (white on black), as BodyM mask")
+    pr.add_argument("--side", required=True, help="side silhouette, like BodyM's mask_left")
+    pr.add_argument("--height", type=float, required=True, help="cm")
+    pr.add_argument("--height-kind", choices=("measured", "stated"), default="measured")
+    pr.add_argument("--weight", type=float, default=None, help="kg; left out: typical weight (D-027)")
+    pr.add_argument("--weight-kind", choices=("scale", "stated"), default="stated")
+    pr.add_argument("--sex", choices=("female", "male"), required=True)
+    pr.add_argument("--age-range", default=None, help="18-24 ... 65+ (adults only)")
+    pr.add_argument("--clothing", default=None)
+    pr.add_argument("--ckpt", required=True)
+    pr.add_argument("--report", default=None, help="default: eval_report.json beside the checkpoint")
+    pr.add_argument("--routing", default=None, help="default: packaged routing_default.json")
+    pr.add_argument("--data", default=None, help="BodyM: only for a typical weight with r1-r4")
+    pr.add_argument("--out", default=None, help="save the anthro-output/1 JSON here")
+    pr.set_defaults(fn=_predict_silhouettes)
+
+    rx = sub.add_parser("read-export", help="S7-0: check and summarise an AnthropometryDC export folder")
+    rx.add_argument("--folder", required=True)
+    rx.add_argument("--include-practice", action="store_true")
+    rx.set_defaults(fn=_read_export)
 
     a = p.parse_args(argv)
     a.fn(a)

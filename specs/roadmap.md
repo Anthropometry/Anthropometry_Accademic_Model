@@ -52,10 +52,12 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [ ] Lengths and girths reported separately
 - [x] Consistency across a person's photos
 
-## S7-0 Foundation for the full measurement set and our own data — spec approved 24 Nov 2026, building
+## S7-0 Foundation for the full measurement set and our own data — built 25 Nov 2026, waiting for a Colab run
 
 - [x] Spec approved (specs/s7-0-foundation/spec.md)
-- [ ] Catalogue from the app's codes; output format anthro-output/1; suppliers + routing; export loader
+- [x] Catalogue from the app's codes; output format anthro-output/1; suppliers + routing; export loader
+- [x] `anthro predict-silhouettes` and `anthro read-export`; notebooks/04_s7_predict.ipynb
+- [ ] Ryan's Colab run of notebook 04 with r4
 
 ## Next after S7-0
 

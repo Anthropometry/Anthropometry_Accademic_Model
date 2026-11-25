@@ -46,6 +46,9 @@ anthro evaluate --data bodym --ckpt runs/r1/best.pt       # steps 3–4 (--test 
 anthro geometry     --data bodym --out GEO                # S3b geometry cache
 anthro geometry-fit --data bodym --cache GEO --out FIT    # S3b levels + correction
 anthro geometry-shape --data bodym --cache GEO --fit FIT  # S3c superellipse check
+anthro predict-silhouettes --front F --side S --height H --sex female --ckpt runs/r4/best.pt  # S7-0
+anthro read-export --folder anthro-export-...             # S7-0: check an app export (counts only)
+python scripts/sync_catalog.py APP/src/lib/measurements.ts --source "repo branch@commit"   # S7-0
 ```
 
 ## Reporting
