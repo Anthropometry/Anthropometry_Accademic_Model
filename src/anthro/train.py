@@ -34,7 +34,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from . import checkpoint, model
+from . import checkpoint, model, typical_weight
 from . import geometry_fit as gfit
 from .config import HEIGHT_COL, MEASUREMENTS, WEIGHT_COL, TrainConfig
 from .data import fingerprint, load_all, split_by_person
@@ -83,6 +83,8 @@ def run(data_root: str, out_dir: str, cfg: TrainConfig, cache_dir: str | None = 
     # Statistics from the training part only (see dataset.py).
     x_scaler = Scaler.fit(train_df[[HEIGHT_COL, WEIGHT_COL]].to_numpy(np.float64))
     y_scaler = Scaler.fit(train_df[list(MEASUREMENTS)].to_numpy(np.float64))
+
+    tw_fit = typical_weight.fit(train_df)     # S7-0 / D-027: stored so prediction can fill a missing weight
 
     # The cache name includes the split seed and fraction, so a different split can't reuse it.
     tag = f"s{cfg.seed}v{cfg.val_fraction:g}"
@@ -141,7 +143,8 @@ def run(data_root: str, out_dir: str, cfg: TrainConfig, cache_dir: str | None = 
         if saved:
             best = val_mae
             best_table = summarise(val_err)
-            checkpoint.save(ckpt_path, net, cfg, x_scaler, y_scaler, data_fp, extra={"epoch": epoch},
+            checkpoint.save(ckpt_path, net, cfg, x_scaler, y_scaler, data_fp,
+                            extra={"epoch": epoch, "typical_weight": tw_fit},
                             geo_fit=gfit.to_plain(geo_fit) if geo_fit is not None else None)
         log.append(row)
         print(f"epoch {epoch:2d} | train loss {row['train_loss']:.3f} | val MAE {val_mae:.2f} cm"
