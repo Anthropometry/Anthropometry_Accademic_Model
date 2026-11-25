@@ -159,15 +159,18 @@ def sanity_checks(estimates: dict, sex: str, rough: dict) -> tuple[dict, list[st
         return e.value_cm if e is not None and e.value_cm is not None else None
 
     checks = [("underbust_girth", lambda u: v("bust_girth") is None or u < v("bust_girth"),
-               "under-bust should be smaller than bust"),
+               "under-bust came out larger than bust"),
               ("high_hip_girth", lambda x: (v("waist_girth") is None or x > v("waist_girth"))
                and (v("hip_girth") is None or x < v("hip_girth")),
-               "high hip should lie between waist and hip")]
+               "high hip came out outside the waist-to-hip range")]
     for code, ok, rule in checks:
         e = out.get(code)
         if e is not None and e.quality == "rough" and not ok(e.value_cm):
             e.flags = [*e.flags, "order_check_failed"]
-            notes.append(f"{labels[code]['label'].lower()}: {rule}; treat this value with extra caution")
+            # Some bodies really have this shape (e.g. a belly larger than the hips), so this is a prompt
+            # to check, never a reason to withhold the value.
+            notes.append(f"{labels[code]['label'].lower()}: {rule}. This can be a real body shape (for "
+                         "example a belly larger than the hips) or an outline error: check it with a tape")
     return out, notes
 
 
