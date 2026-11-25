@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Protocol
 
 from . import catalog
+from .config import HEIGHT_AGREEMENT_CM
 from .output import NOT_AVAILABLE, Estimate
 
 
@@ -62,12 +63,25 @@ class PhotoModel:
             err = ctx.errors.get(bodym_name)
             out[code] = Estimate(value, self.name, "measured", match, err,
                                  ctx.error_basis if err is not None else None, list(ctx.flags))
+        if "height" in out and ctx.person.get("height_kind") == "stated":
+            out["height"] = _within_stated(out["height"], ctx.person["height_cm"])
         return out
 
 
+def _within_stated(est: Estimate, stated_cm: float) -> Estimate:
+    """D-029: an estimate of a stated height stays within HEIGHT_AGREEMENT_CM of what was said."""
+    lo, hi = stated_cm - HEIGHT_AGREEMENT_CM, stated_cm + HEIGHT_AGREEMENT_CM
+    if lo <= est.value_cm <= hi:
+        return est
+    est.value_cm = min(max(est.value_cm, lo), hi)
+    est.flags = [*est.flags, "held_within_2cm_of_stated"]
+    return est
+
+
 class Input:
-    """Height as given, when it was measured with a tape: the person's own measured height is more
-    accurate than any estimate of it. A stated (self-reported) height falls through to the model."""
+    """Height as given, when it was measured with a tape (D-029, approved by Ryan 25 Nov 2026): a
+    measured height is more accurate than any estimate of it. A stated (self-reported) height falls
+    through to the photo model, held within 2 cm of what the person said."""
 
     name = "input"
 

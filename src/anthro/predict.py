@@ -35,7 +35,7 @@ import torch
 from . import catalog, checkpoint, output, suppliers, typical_weight
 from . import geometry as geo
 from . import geometry_fit as gfit
-from .config import HEIGHT_COL, MEASUREMENTS, SEX_COL, SUBJECT_COL, WEIGHT_COL
+from .config import HEIGHT_AGREEMENT_CM, HEIGHT_COL, MEASUREMENTS, SEX_COL, SUBJECT_COL, WEIGHT_COL
 from .evaluate import RETAKE_LEVELS
 from .preprocess import check_inputs, check_silhouette, crop_pad_resize, load_mask
 
@@ -129,6 +129,19 @@ def retake_check(values: dict, table, threshold: float | None) -> list[str]:
     return []
 
 
+def height_warnings(person: dict, model_height_cm: float) -> list[str]:
+    """D-029: the model's height estimate should agree with the given height within 2 cm."""
+    gap = model_height_cm - person["height_cm"]
+    if abs(gap) < HEIGHT_AGREEMENT_CM:
+        return []
+    if person["height_kind"] == "measured":
+        return [f"the photo model's height ({model_height_cm:.1f} cm) is {abs(gap):.1f} cm from the tape "
+                "height: check the typed height and that the photos show the whole body, camera level"]
+    return [f"the photo model's height ({model_height_cm:.1f} cm) was more than {HEIGHT_AGREEMENT_CM:g} cm "
+            f"from the stated height; reported as {person['height_cm'] + (2 if gap > 0 else -2):.1f} cm "
+            "(held within 2 cm)"]
+
+
 def load_report(ckpt: str | Path, report_path: str | Path | None) -> dict | None:
     p = Path(report_path) if report_path else Path(ckpt).parent / "eval_report.json"
     return json.loads(p.read_text()) if p.exists() else None
@@ -150,6 +163,7 @@ def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, h
         errors, basis = suppliers.errors_from_report(report, "testB")
         threshold = (report["testB"].get("retake") or {}).get("threshold_cm")
     reasons += retake_check(values, table, threshold)
+    warnings += height_warnings(person, values["height"])
 
     ctx = suppliers.Context(person, values, ["weight_assumed"] if person["weight_kind"] == "assumed" else [],
                             errors, basis)

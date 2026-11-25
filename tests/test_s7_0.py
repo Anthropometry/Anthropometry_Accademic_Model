@@ -191,6 +191,7 @@ def test_woman_gets_24_measurements_with_test_b_errors(run):
     assert m["bust_point_distance"]["quality"] == "not_available"
     assert doc["person"]["weight_kind"] == "stated" and not m["waist_girth"]["flags"]
     assert m["height"]["value_cm"] == 165 and m["height"]["source"] == "input"     # tape height kept
+    assert any("tape height" in w for w in doc["warnings"])    # the 1-epoch fake model is far off
     assert any("Ghanaian" in w for w in doc["warnings"])
 
 
@@ -217,10 +218,28 @@ def test_cli_refuses_a_child_and_a_bad_height(run):
         main([*base, "--height", "300"])
 
 
-def test_stated_height_is_estimated_by_the_model(run):
+def test_stated_height_is_estimated_by_the_model_within_2cm(run):
     doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60,
                           height_kind="stated")
-    assert doc["measurements"]["height"]["source"] == "photo_model"
+    h = doc["measurements"]["height"]
+    assert h["source"] == "photo_model" and 163 <= h["value_cm"] <= 167
+
+
+@pytest.mark.parametrize("model_cm,expected", [(178.0, 172.0), (165.0, 168.0), (169.0, 169.0)])
+def test_stated_height_is_held_within_2cm(model_cm, expected):
+    person = {**PERSON, "height_cm": 170.0, "height_kind": "stated"}
+    est = suppliers.PhotoModel().estimate(suppliers.Context(person, {"height": model_cm}))["height"]
+    assert est.value_cm == expected
+    assert ("held_within_2cm_of_stated" in est.flags) == (model_cm != expected)
+
+
+def test_height_gap_of_2cm_or_more_is_warned():
+    measured = {**PERSON, "height_cm": 170.0}
+    assert predict.height_warnings(measured, 171.9) == []
+    assert "tape height" in predict.height_warnings(measured, 172.5)[0]
+    stated = {**measured, "height_kind": "stated"}
+    assert "172.0" in predict.height_warnings(stated, 175.0)[0]
+    assert "168.0" in predict.height_warnings(stated, 160.0)[0]
 
 
 def test_high_bmi_is_warned(run):
