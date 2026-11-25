@@ -20,6 +20,10 @@ MEASUREMENTS: tuple[str, ...] = (
 # Supervisor's target: predictions within about ±1.5 cm (DISCUSSION D-002).
 TOLERANCE_CM = 1.5
 
+# D-029 (Ryan, 25 Nov 2026): the model's height must stay within this distance of the height the
+# person gave. Stated height: the estimate is held inside it. Measured height: a bigger gap warns.
+HEIGHT_AGREEMENT_CM = 2.0
+
 # Input columns as they appear in hwg_metadata.csv.
 HEIGHT_COL, WEIGHT_COL, SEX_COL, SUBJECT_COL, PHOTO_COL = (
     "height_cm", "weight_kg", "gender", "subject_id", "photo_id",

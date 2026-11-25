@@ -39,6 +39,12 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [ ] Proposed next: capture-variation augmentation + repeat seeds (needs a spec)
 - Execution prompt: specs/s3b-geometric-girth/execute-prompt.md
 
+## S3c Shape check (superellipse) — done 19 Nov 2026
+
+- [x] Spec approved (specs/s3c-shape-check/spec.md, D-023)
+- [x] `anthro geometry-shape`: k vs D/W and front/back; oval × k vs + front/back vs superellipse
+- [x] Real run on BodyM (19 Nov): superellipse tested, no gain; oval × k stays (RESULTS.md)
+
 ## S4 Compare photo model vs baseline
 
 - [x] Per measurement: MAE and % within ±1.5 cm, baseline vs photo, Test-A and Test-B
@@ -46,7 +52,21 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [ ] Lengths and girths reported separately
 - [x] Consistency across a person's photos
 
-## S5 SMPL-X extras
+## S7-0 Foundation for the full measurement set and our own data — built 25 Nov 2026, waiting for a Colab run
+
+- [x] Spec approved (specs/s7-0-foundation/spec.md)
+- [x] Catalogue from the app's codes; output format anthro-output/1; suppliers + routing; export loader
+- [x] `anthro predict-silhouettes` and `anthro read-export`; notebooks/04_s7_predict.ipynb
+- [ ] Ryan's Colab run of notebook 04 with r4
+
+## Next after S7-0
+
+- S7a predict pipeline: photo → silhouette → measurements (needs a segmentation model: new dependency)
+- S5a ANSUR II supplier (D-024; licence check first)
+- S5b outline-geometry supplier for rough estimates (high hip, knee, under-bust, front length)
+- S8 train on the app's data (missing values allowed, both weights, clothing)
+
+## S5 SMPL-X extras — set aside (D-026, 24 Nov 2026)
 
 - [ ] Fit SMPL-X shape to the predicted (or corrected) measurements + height + weight
 - [ ] Virtual tape for neck, armhole, back length, rise; inconsistency flag when no plausible body fits

@@ -71,11 +71,14 @@ anthro geometry     --data bodym --out geo
 anthro geometry-fit --data bodym --cache geo --out geo/geo_fit.json
 anthro train        --data bodym --out runs/r4 --loss cm --img-h 512 --img-w 256 --geo-fit geo/geo_fit.json --geo-cache geo
 anthro evaluate     --data bodym --ckpt runs/r4/best.pt --geo-cache geo --bootstrap 1000
+anthro geometry-shape --data bodym --cache geo --fit geo/geo_fit.json   # S3c superellipse check
+anthro predict-silhouettes --front F --side S --height 165 --sex female --age-range 25-34 --ckpt runs/r4/best.pt   # S7-0: full set (24 women / 18 men)
+anthro read-export --folder anthro-export-YYYY-MM-DD-HH-MM   # S7-0: check an app export
 ```
 
 ## Tests
 
-51 tests run on a small fake dataset shaped like BodyM, on a CPU, in under a minute. They include
+58 tests run on a small fake dataset shaped like BodyM, on a CPU, in under a minute. They include
 refusal cases (bad files, impossible heights, unsafe checkpoints, mismatched data splits).
 **Test coverage: about 97% of the code** (CI fails below 80%; run `pytest --cov` to see it per file).
 
@@ -95,8 +98,9 @@ specs/               spec-driven development
   s2-baseline/
   s3-photo-model/
   s3b-geometric-girth/   spec.md + execute-prompt.md
+  s3c-shape-check/
 src/anthro/          the package: config · data · baseline · preprocess · dataset · model · train ·
-                     evaluate · checkpoint · geometry · geometry_fit · cli
+                     evaluate · checkpoint · geometry · geometry_fit · geometry_shape · cli
 tests/               fake-BodyM tests (unit and end to end)
 notebooks/           Colab drivers: 01 explore BodyM · 02 first model · 03 S3b experiments
 docs/                results, challenges, data, security, accessibility
