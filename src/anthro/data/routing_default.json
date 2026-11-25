@@ -1,28 +1,130 @@
 {
-  "_about": "For each app code, the suppliers to try in order; the first that gives a value wins (S7-0). Suppliers not installed yet (ansur S5a, geometry S5b, calibration S6, own_model S8) are skipped, so today their codes fall through to the photo model or to not_available. Switching a code to our own model later is a change to this file only.",
-  "height": ["input", "own_model", "calibration", "photo_model"],
-  "neck_girth": ["own_model", "calibration", "ansur"],
-  "shoulder_width": ["own_model", "calibration", "photo_model"],
-  "shoulder_length": ["own_model", "calibration", "ansur"],
-  "bust_girth": ["own_model", "calibration", "photo_model"],
-  "underbust_girth": ["own_model", "calibration", "geometry"],
-  "chest_girth": ["own_model", "calibration", "photo_model"],
-  "bust_point_distance": ["own_model"],
-  "shoulder_to_bust_point": ["own_model"],
-  "front_length": ["own_model", "calibration", "geometry"],
-  "back_length": ["own_model", "calibration", "ansur"],
-  "waist_girth": ["own_model", "calibration", "photo_model"],
-  "high_hip_girth": ["own_model", "calibration", "geometry"],
-  "hip_girth": ["own_model", "calibration", "ansur", "photo_model"],
-  "waist_to_hip": ["own_model", "calibration", "ansur"],
-  "arm_length": ["own_model", "calibration", "photo_model"],
-  "upper_arm_girth": ["own_model", "calibration", "photo_model"],
-  "wrist_girth": ["own_model", "calibration", "photo_model"],
-  "inseam": ["own_model", "calibration", "ansur"],
-  "outseam": ["own_model", "calibration", "ansur"],
-  "thigh_girth": ["own_model", "calibration", "photo_model"],
-  "knee_girth": ["own_model", "calibration", "geometry"],
-  "calf_girth": ["own_model", "calibration", "photo_model"],
-  "waist_to_knee": ["own_model", "calibration", "ansur"],
-  "shoulder_to_knee": ["own_model", "calibration", "ansur"]
+  "_about": "For each app code, the suppliers to try in order; the first that gives a value wins (S7-0). A supplier that isn't installed, or gives no value (e.g. a mix that lost its test, S5a), is skipped. Today: input (measured height), photo_model, and with ANSUR formulas ansur and mix; geometry (S5b), calibration (S6) and own_model (S8) come later. Switching a code to our own model is a change to this file only.",
+  "height": [
+    "input",
+    "own_model",
+    "calibration",
+    "photo_model"
+  ],
+  "neck_girth": [
+    "own_model",
+    "calibration",
+    "ansur"
+  ],
+  "shoulder_width": [
+    "own_model",
+    "calibration",
+    "photo_model"
+  ],
+  "shoulder_length": [
+    "own_model",
+    "calibration",
+    "ansur"
+  ],
+  "bust_girth": [
+    "own_model",
+    "calibration",
+    "mix",
+    "photo_model"
+  ],
+  "underbust_girth": [
+    "own_model",
+    "calibration",
+    "geometry"
+  ],
+  "chest_girth": [
+    "own_model",
+    "calibration",
+    "mix",
+    "photo_model"
+  ],
+  "bust_point_distance": [
+    "own_model"
+  ],
+  "shoulder_to_bust_point": [
+    "own_model"
+  ],
+  "front_length": [
+    "own_model",
+    "calibration",
+    "ansur",
+    "geometry"
+  ],
+  "back_length": [
+    "own_model",
+    "calibration",
+    "ansur"
+  ],
+  "waist_girth": [
+    "own_model",
+    "calibration",
+    "mix",
+    "photo_model"
+  ],
+  "high_hip_girth": [
+    "own_model",
+    "calibration",
+    "geometry"
+  ],
+  "hip_girth": [
+    "own_model",
+    "calibration",
+    "ansur",
+    "photo_model"
+  ],
+  "waist_to_hip": [
+    "own_model",
+    "calibration",
+    "ansur"
+  ],
+  "arm_length": [
+    "own_model",
+    "calibration",
+    "photo_model"
+  ],
+  "upper_arm_girth": [
+    "own_model",
+    "calibration",
+    "photo_model"
+  ],
+  "wrist_girth": [
+    "own_model",
+    "calibration",
+    "photo_model"
+  ],
+  "inseam": [
+    "own_model",
+    "calibration",
+    "ansur"
+  ],
+  "outseam": [
+    "own_model",
+    "calibration",
+    "ansur"
+  ],
+  "thigh_girth": [
+    "own_model",
+    "calibration",
+    "photo_model"
+  ],
+  "knee_girth": [
+    "own_model",
+    "calibration",
+    "geometry"
+  ],
+  "calf_girth": [
+    "own_model",
+    "calibration",
+    "photo_model"
+  ],
+  "waist_to_knee": [
+    "own_model",
+    "calibration",
+    "ansur"
+  ],
+  "shoulder_to_knee": [
+    "own_model",
+    "calibration",
+    "ansur"
+  ]
 }

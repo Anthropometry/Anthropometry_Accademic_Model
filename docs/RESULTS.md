@@ -2,6 +2,120 @@
 
 Only numbers from Ryan's real runs go here, each with its date, data fingerprint and commit.
 
+## S5b — Last four measurements (25 Nov 2026, commit 3aeda47, branch s5b-geometry-rough)
+
+**ANSUR columns that might match** (`anthro ansur-columns`): no under-bust, knee or high-hip girth exists in
+ANSUR II (`lowerthighcircumference` is above the knee). Front length: `waistfrontlengthsitting` (seated;
+D-033). Knee height from ANSUR: 0.277 of stature (median of `kneeheightmidpatella` / `stature`).
+
+**Front length from ANSUR** (held-out, 5 folds by person; chosen formula: extended, blurred):
+
+| Sex | MAE | % within 1.5 / 2 / 3 cm | Sex-average baseline % ±1.5 | Black participants % ±1.5 |
+| --- | --- | --- | --- | --- |
+| women | 1.49 cm | 58.1 / 70.6 / 89.0 | 47.2 | 57.2 |
+| men | 1.78 cm | 50.2 / 63.4 / 82.0 | 39.2 | 50.9 |
+
+**Rough outline estimates on 202 validation people** (no error: D-034). Measured for 100% of people in every
+sex and BMI band. Spread (median, 5th–95th percentile, both sexes pooled): under-bust 94.4 (79.0–120.7),
+high hip 96.9 (84.1–117.4), knee 38.5 (33.7–51.4) cm.
+
+**Order against BodyM's measured girths, 202 validation people** (commit 3536241): under-bust below BodyM
+chest for 85.1% (median 5.6 cm below); high hip between BodyM waist and hip for 81.7%; above BodyM hip for 11.9%;
+below BodyM waist for 6.4%. BodyM's hip is at a fixed height, and some bodies (a belly larger than the hips)
+legitimately break the waist < high hip < hip order, so these rates are evidence, not errors.
+
+**Two predictions (Test-B):** a woman got 21 of 24 rows (front length missing: a routing bug, since fixed); her
+high hip (98.7) came out above her hip (87.4) and was flagged by the order check. A man got 17 of 18 (front
+length, same bug) and a retake warning (outline and photo model 15.6 cm apart on hip); his knee girth read
+49.4 cm, near the top of the validation spread.
+
+## S5a — ANSUR II formulas and chest/waist mix test (25 Nov 2026, commit 7dc82e0, ANSUR fingerprint 8cf328fefeb32acd)
+
+ANSUR II: 1,986 women, 4,082 men. Held out 5 folds by person. Extended formulas' photo-model inputs blurred to
+r4's Test-B per-person error (chest 2.42, waist 2.40, shoulder 0.70, thigh 1.27, calf 1.05, wrist 0.53,
+hip 1.99 cm). Scored against ANSUR's tape values; definition gaps (navel waist, vertical lengths) and the
+US-to-Ghana gap are **not** included.
+
+### Chosen formula, % within ±1.5 cm (average error, cm)
+
+| Code | Women | Men | Formula (w / m) | Sex-average baseline (w / m) |
+| --- | --- | --- | --- | --- |
+| shoulder_length | 93.1 (0.64) | 93.0 (0.67) | extended / extended | 85.9 / 85.1 |
+| neck_girth | 75.0 (1.03) | 67.1 (1.23) | extended / extended | 57.2 / 45.5 |
+| shoulder_to_knee | 66.4 (1.26) | — | extended | 31.7 |
+| waist_to_knee | 65.7 (1.27) | — | extended | 38.9 |
+| back_length | 56.0 (1.57) | 55.2 (1.58) | extended / extended | 43.7 / 42.6 |
+| outseam | 53.3 (1.61) | 52.6 (1.65) | extended / extended | 24.0 / 22.4 |
+| waist_to_hip | 51.1 (1.72) | 45.6 (2.01) | extended / basic | 46.5 / 43.0 |
+| inseam | 45.3 (1.94) | 48.5 (1.89) | basic / basic | 26.9 / 24.8 |
+| hip_girth (fullest) | 45.1 (1.99) | 48.6 (1.85) | extended / extended | 15.7 / 16.0 |
+
+### Fairness: ANSUR's Black participants vs everyone else (D-030), % within ±1.5 cm
+
+| Code | Women: Black (656) / others (1,330) | Men: Black (642) / others (3,440) |
+| --- | --- | --- |
+| inseam | **34.1 / 50.8** | **30.5 / 51.8** |
+| hip_girth | 41.9 / 46.7 | 41.4 / 49.9 |
+| waist_to_hip | 49.7 / 51.7 | 41.0 / 46.5 |
+| outseam | 48.9 / 55.5 | 49.5 / 53.1 |
+| others | within about 2–4 points | within about 2 points |
+
+Inseam is much worse for Black participants: the formula has no leg information and carries the majority's
+leg-to-height proportions. This matters most for Ghana.
+
+### Cost of a stated height and weight (basic formula, ANSUR's self-reported values)
+
+Girths and upper-body lengths: +0.0–0.5 cm average error. Leg lengths: inseam +0.3/+0.5, outseam +0.5/+0.7,
+waist to knee +0.2, shoulder to knee +0.3 cm (women / men).
+
+### Follow-ups F1, F2 and the tolerance view (25 Nov 2026, commit 4f37681, branch s5a-ansur)
+
+**F1, leg-length check: failed.** Median leg-length/height on BodyM training people 0.455; ANSUR crotch
+height/stature 0.481; difference 0.026 > limit 0.02 (about 4.4 cm at 170 cm). BodyM's leg length is a
+different measurement; not used.
+
+**F2, formulas fitted on ANSUR's Black participants, judged on them (5 folds by person):**
+
+| Code | Sex | General formula: MAE, % ±1.5 / 2 / 3 cm | Black-fitted: MAE, % ±1.5 / 2 / 3 cm |
+| --- | --- | --- | --- |
+| inseam | women (656) | 2.34 cm; 34.1 / 48.3 / 66.9 | **1.63 cm; 52.6 / 68.9 / 86.9** |
+| inseam | men (642) | 2.83 cm; 30.5 / 39.4 / 58.1 | **1.83 cm; 50.2 / 62.5 / 81.9** |
+| hip_girth | women | 2.13 cm; 41.9 / 54.0 / 73.3 | 2.07 cm; 43.1 / 58.4 / 76.5 |
+| hip_girth | men | 2.11 cm; 41.4 / 53.9 / 75.1 | 2.00 cm; 43.8 / 57.2 / 76.5 |
+
+Switched on for everyone by Ryan (D-032).
+
+**Photo model r4 on Test-B (400 people): % within 1.5 / 2 / 3 cm (exploration; target stays ±1.5 cm).**
+
+| Measurement | ±1.5 | ±2 | ±3 |
+| --- | ---: | ---: | ---: |
+| chest | 40.2 | 53.0 | 69.8 |
+| waist | 40.0 | 54.2 | 70.8 |
+| hip (BodyM) | 50.2 | 62.3 | 77.0 |
+| leg-length | 66.5 | 81.5 | 90.2 |
+| thigh | 69.0 | 81.8 | 92.2 |
+| height | 71.5 | 81.8 | 89.5 |
+| shoulder-to-crotch | 74.0 | 84.8 | 95.2 |
+| calf | 75.2 | 87.0 | 97.2 |
+| bicep | 78.2 | 90.5 | 97.2 |
+| arm-length | 86.5 | 94.2 | 97.8 |
+| ankle | 89.2 | 94.0 | 98.5 |
+| forearm | 90.5 | 96.2 | 99.8 |
+| shoulder-breadth | 93.0 | 98.2 | 99.8 |
+| wrist | 97.0 | 98.8 | 99.8 |
+
+Retake warning on Test-B: threshold 7.71 cm (set on validation to fire for 10%) fired for **33%** of people;
+flagged people: chest 36.8%, waist 33.8%, hip 44.4% within ±1.5 cm vs 41.9 / 43.1 / 53.2% not flagged.
+
+### Mix test, 202 BodyM validation people (5 folds by person)
+
+| Girth | Photo model alone | Photo model + ANSUR | Decision |
+| --- | --- | --- | --- |
+| chest/bust | MAE 1.71 cm, 55.0% | MAE 1.76 cm, 57.9% | not kept (better %, worse MAE: must win both) |
+| waist | MAE 1.81 cm, 56.4% | MAE 1.84 cm, 55.0% | not kept |
+
+ANSUR adds nothing to the big girths; the photo model stays. Test-B was not scored (nothing kept).
+
 ## S3c — Shape check: superellipse vs oval correction (19 Nov 2026, commit 34dec41)
 
 1,816 training people (validation excluded), 5-fold CV grouped by person, per person.

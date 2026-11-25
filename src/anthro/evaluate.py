@@ -44,6 +44,11 @@ def summarise(err: pd.DataFrame, tol: float = TOLERANCE_CM) -> pd.DataFrame:
     }).round(2)
 
 
+def tolerance_view(err: pd.DataFrame, tols=(1.5, 2.0, 3.0)) -> pd.DataFrame:
+    """% of people within each tolerance, per measurement. Exploration only: target stays ±1.5 cm (D-002)."""
+    return pd.DataFrame({f"within_{t:g}cm_pct": (err <= t).mean() * 100 for t in tols}).round(1)
+
+
 def consistency(df: pd.DataFrame, pred_cm: np.ndarray) -> pd.Series:
     """Average standard deviation (cm) of one person's predictions across their photo pairs.
 

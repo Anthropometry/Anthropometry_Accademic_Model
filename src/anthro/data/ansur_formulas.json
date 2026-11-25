@@ -1,0 +1,919 @@
+{
+  "format": "anthro-ansur-formulas/1",
+  "catalogue": "anthropometrydc-measurements@807cd85",
+  "ansur_fingerprint": "8cf328fefeb32acd",
+  "noise_basis": "BodyM testB, per-person average error",
+  "noise_mae_cm": {
+    "chest": 2.42,
+    "waist": 2.4,
+    "shoulder-breadth": 0.7,
+    "thigh": 1.27,
+    "calf": 1.05,
+    "wrist": 0.53,
+    "hip": 1.99,
+    "leg-length": 1.41
+  },
+  "girth_basic": {
+    "chest": {
+      "female": {
+        "intercept": 8.258199228245331,
+        "coef": [
+          0.22657078574123496,
+          0.060703548375495284,
+          1.781379147625033
+        ]
+      },
+      "male": {
+        "intercept": 17.789093467816897,
+        "coef": [
+          0.19550067701264925,
+          0.1214189716366441,
+          1.5662293569248271
+        ]
+      }
+    },
+    "waist": {
+      "female": {
+        "intercept": 0.2702870376426887,
+        "coef": [
+          0.14747601927663828,
+          0.1652887665574453,
+          1.984803844953494
+        ]
+      },
+      "male": {
+        "intercept": 10.093733747558545,
+        "coef": [
+          0.08774636942979724,
+          0.25590781100093524,
+          1.68558430141147
+        ]
+      }
+    }
+  },
+  "formulas": {
+    "neck_girth": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": 12.604474876382174,
+        "coef": [
+          0.09623649944779103,
+          0.048050958146225516,
+          0.47468192465346504,
+          0.006346249638751024,
+          -0.014254729892051865,
+          0.1099649026787225,
+          -0.10754934002664297,
+          -0.12428384050685373,
+          0.31066599310674853,
+          -0.03381109004424549
+        ],
+        "mae_cm": 1.03,
+        "pct_within": 75.0,
+        "range_cm": [
+          32.9,
+          42.3
+        ],
+        "definition_match": "same"
+      },
+      "male": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": 20.67781561877347,
+        "coef": [
+          0.06386921823789353,
+          0.07572989521514228,
+          0.5739571844364781,
+          -0.005723051617155458,
+          -0.016510789612207796,
+          0.1796337994937188,
+          -0.12951583213980236,
+          -0.15354258513454175,
+          0.25653126132207366,
+          -0.06379405671688126
+        ],
+        "mae_cm": 1.23,
+        "pct_within": 67.1,
+        "range_cm": [
+          38.081,
+          50.2
+        ],
+        "definition_match": "same"
+      }
+    },
+    "shoulder_length": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": 4.78714731482107,
+        "coef": [
+          -0.036187991504378215,
+          0.0357729013123536,
+          -0.15431203116671233,
+          0.0016332002815911413,
+          9.922648093852067e-05,
+          0.41023274060601583,
+          0.032088221202123374,
+          -0.006877616550683278,
+          -0.017404602461926353,
+          -0.0043579039342254945
+        ],
+        "mae_cm": 0.64,
+        "pct_within": 93.1,
+        "range_cm": [
+          11.385,
+          16.015000000000008
+        ],
+        "definition_match": "same"
+      },
+      "male": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": -1.5535638715761557,
+        "coef": [
+          -0.01413689705101703,
+          -0.007020450186319416,
+          -0.1517715983810655,
+          0.004151542420859117,
+          0.004394168903155099,
+          0.4360808271098836,
+          0.015487722645399096,
+          0.046735564369876824,
+          0.03481186788232702,
+          0.013955835802988993
+        ],
+        "mae_cm": 0.67,
+        "pct_within": 93.0,
+        "range_cm": [
+          12.5,
+          17.5
+        ],
+        "definition_match": "same"
+      }
+    },
+    "hip_girth": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist"
+        ],
+        "intercept": -8.760786536813853,
+        "coef": [
+          0.3394629067370088,
+          -0.09342464499245874,
+          1.0250475564692536,
+          -0.023044464812192265,
+          0.06082565904814015,
+          -0.13395379685613876,
+          0.7937025479918499,
+          -0.12375898812184936,
+          -0.42924365841136386
+        ],
+        "mae_cm": 1.99,
+        "pct_within": 45.1,
+        "range_cm": [
+          86.7,
+          120.63000000000001
+        ],
+        "definition_match": "same"
+      },
+      "male": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist"
+        ],
+        "intercept": -5.255746612208455,
+        "coef": [
+          0.24432080970613387,
+          -0.04043554521458488,
+          0.7138071386605276,
+          -0.08367114704373411,
+          0.1489169492216233,
+          0.041269124712272946,
+          0.6928919370283009,
+          -0.0348024239659236,
+          -0.04656794081062674
+        ],
+        "mae_cm": 1.85,
+        "pct_within": 48.6,
+        "range_cm": [
+          86.181,
+          121.8
+        ],
+        "definition_match": "same"
+      }
+    },
+    "back_length": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": 16.904041008998355,
+        "coef": [
+          0.1123959185041512,
+          0.06960039505507272,
+          -0.2683346051475333,
+          -0.047103116076879434,
+          0.2332926361101223,
+          -0.020343926029995293,
+          -0.07701859783212413,
+          0.09135947091656153,
+          -0.023059603705873212,
+          -0.03652725670703879
+        ],
+        "mae_cm": 1.57,
+        "pct_within": 56.0,
+        "range_cm": [
+          36.485,
+          49.415000000000006
+        ],
+        "definition_match": "differs"
+      },
+      "male": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": 5.228407656210038,
+        "coef": [
+          0.23643370714671882,
+          -0.006495641728645703,
+          0.2599853296731,
+          -0.06749278961779186,
+          0.16068772056434,
+          -0.03703115638406881,
+          -0.185077485227035,
+          -0.012004210989110883,
+          -0.09319589932995082,
+          0.015877083129479153
+        ],
+        "mae_cm": 1.58,
+        "pct_within": 55.2,
+        "range_cm": [
+          41.5,
+          54.819
+        ],
+        "definition_match": "differs"
+      }
+    },
+    "inseam": {
+      "female": {
+        "kind": "basic",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi"
+        ],
+        "intercept": -6.168134646392019,
+        "coef": [
+          0.49396659340426646,
+          0.07696433383273608,
+          -0.2953829077955127
+        ],
+        "mae_cm": 1.94,
+        "pct_within": 45.3,
+        "range_cm": [
+          62.885000000000005,
+          82.31500000000003
+        ],
+        "definition_match": "presumed"
+      },
+      "male": {
+        "kind": "basic",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi"
+        ],
+        "intercept": -16.343138936633693,
+        "coef": [
+          0.5562229384550123,
+          -0.013048252747750667,
+          -0.10557778992664635
+        ],
+        "mae_cm": 1.89,
+        "pct_within": 48.5,
+        "range_cm": [
+          67.7,
+          88.4
+        ],
+        "definition_match": "presumed"
+      }
+    },
+    "outseam": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": -14.038299039176081,
+        "coef": [
+          0.7667738772327924,
+          0.02612990246429707,
+          0.4538019631133806,
+          -0.035918474864312336,
+          -0.20435491692710495,
+          0.053665809419562845,
+          0.10317454949001405,
+          -0.2834910467132494,
+          -0.3547146916148148,
+          -0.03604276466790106
+        ],
+        "mae_cm": 1.61,
+        "pct_within": 53.3,
+        "range_cm": [
+          80.985,
+          103.215
+        ],
+        "definition_match": "differs"
+      },
+      "male": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": -16.360361820850386,
+        "coef": [
+          0.7053568142897996,
+          -0.009439499680985931,
+          0.11059663559674274,
+          0.06675666919957889,
+          -0.1790732896858578,
+          0.06637317065624113,
+          0.1661919085435244,
+          -0.14232405391636485,
+          -0.27902089260057994,
+          -0.04211268729252934
+        ],
+        "mae_cm": 1.65,
+        "pct_within": 52.6,
+        "range_cm": [
+          87.5,
+          110.89999999999999
+        ],
+        "definition_match": "differs"
+      }
+    },
+    "waist_to_hip": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": 4.806678275671052,
+        "coef": [
+          -0.0412479395599816,
+          0.05760602315193111,
+          -0.5896361688582161,
+          0.09395157368155702,
+          -0.21409203989265574,
+          0.07618264029829137,
+          -0.10446897843084298,
+          0.13947153385943858,
+          0.31911916430509396,
+          0.30085268476076293
+        ],
+        "mae_cm": 1.72,
+        "pct_within": 51.1,
+        "range_cm": [
+          8.084999999999996,
+          20.10000000000001
+        ],
+        "definition_match": "differs"
+      },
+      "male": {
+        "kind": "basic",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi"
+        ],
+        "intercept": -7.6083243177014666,
+        "coef": [
+          0.15832293403241934,
+          -0.07068136003565445,
+          0.09789047150390275
+        ],
+        "mae_cm": 2.01,
+        "pct_within": 45.6,
+        "range_cm": [
+          10.300000000000008,
+          22.39999999999999
+        ],
+        "definition_match": "differs"
+      }
+    },
+    "waist_to_knee": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": -16.145003757033308,
+        "coef": [
+          0.4468631462034844,
+          -0.07429860874547245,
+          0.26563223349481047,
+          0.028134446160844755,
+          -0.18847997199363561,
+          0.044149966583809465,
+          0.038920427899559434,
+          -0.08429537749505361,
+          -0.047996984330399374,
+          0.08016622932301762
+        ],
+        "mae_cm": 1.27,
+        "pct_within": 65.7,
+        "range_cm": [
+          46.36999999999999,
+          60.0
+        ],
+        "definition_match": "differs"
+      }
+    },
+    "shoulder_to_knee": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": -11.346628612603794,
+        "coef": [
+          0.6320314468419611,
+          -0.09194824134460165,
+          0.22888927316043395,
+          0.06952434645966547,
+          -0.02146895611690902,
+          -0.24344776876948937,
+          -0.08618728063686107,
+          -0.013686934983332457,
+          -0.03939916602754752,
+          0.07845183715402965
+        ],
+        "mae_cm": 1.26,
+        "pct_within": 66.4,
+        "range_cm": [
+          80.085,
+          97.71500000000002
+        ],
+        "definition_match": "differs"
+      }
+    },
+    "front_length": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": 3.2735096017906002,
+        "coef": [
+          0.15896809798216371,
+          -0.012501758218032623,
+          0.07078572902932304,
+          0.06675702492550012,
+          0.10463128595277461,
+          -0.05052707607505754,
+          -0.029492828684872394,
+          0.026018436940364903,
+          -0.04812016461602891,
+          -0.06361679518069054
+        ],
+        "mae_cm": 1.49,
+        "pct_within": 58.1,
+        "range_cm": [
+          30.4,
+          41.3
+        ],
+        "definition_match": "differs"
+      },
+      "male": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist",
+          "hip"
+        ],
+        "intercept": 4.854178211351247,
+        "coef": [
+          0.12441292994067826,
+          0.016419690354364316,
+          -0.19536362859440656,
+          0.07459024815034916,
+          0.17148904981229815,
+          -0.10363340144784214,
+          -0.09345056456735176,
+          0.11182540851014887,
+          0.13095872864168875,
+          -0.044159198806239926
+        ],
+        "mae_cm": 1.78,
+        "pct_within": 50.2,
+        "range_cm": [
+          32.4,
+          45.919000000000004
+        ],
+        "definition_match": "differs"
+      }
+    }
+  },
+  "mix": {
+    "chest": {
+      "kept": false,
+      "intercept": -1.2890935083193398,
+      "coef": [
+        0.979387872999246,
+        0.03762179160558365,
+        -0.40704483990819923
+      ],
+      "inputs": [
+        "photo",
+        "ansur",
+        "male"
+      ],
+      "validation": {
+        "photo_model": {
+          "mae_cm": 1.71,
+          "p90_cm": 3.33,
+          "pct_within": 55.0,
+          "pct_within_2": 66.8,
+          "pct_within_3": 85.6,
+          "people": 202
+        },
+        "mix": {
+          "mae_cm": 1.76,
+          "p90_cm": 3.69,
+          "pct_within": 57.9,
+          "pct_within_2": 65.3,
+          "pct_within_3": 86.1,
+          "people": 202
+        }
+      }
+    },
+    "waist": {
+      "kept": false,
+      "intercept": -0.4063239367576159,
+      "coef": [
+        0.9762629966457405,
+        0.030593399768507706,
+        -0.20775679670890987
+      ],
+      "inputs": [
+        "photo",
+        "ansur",
+        "male"
+      ],
+      "validation": {
+        "photo_model": {
+          "mae_cm": 1.81,
+          "p90_cm": 4.06,
+          "pct_within": 56.4,
+          "pct_within_2": 69.8,
+          "pct_within_3": 79.7,
+          "people": 202
+        },
+        "mix": {
+          "mae_cm": 1.84,
+          "p90_cm": 4.17,
+          "pct_within": 55.0,
+          "pct_within_2": 69.8,
+          "pct_within_3": 78.2,
+          "people": 202
+        }
+      }
+    }
+  },
+  "black_fitted": {
+    "inseam": {
+      "female": {
+        "kind": "basic",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi"
+        ],
+        "intercept": -8.70259302115042,
+        "coef": [
+          0.5317527134671198,
+          0.040739232425003206,
+          -0.26412367966320843
+        ],
+        "mae_cm": 1.63,
+        "pct_within": 52.6,
+        "range_cm": [
+          62.885000000000005,
+          82.31500000000003
+        ],
+        "definition_match": "presumed",
+        "kept": true,
+        "general_on_black": {
+          "mae_cm": 2.34,
+          "p90_cm": 4.29,
+          "pct_within": 34.1,
+          "pct_within_2": 48.3,
+          "pct_within_3": 66.9,
+          "people": 656
+        },
+        "black_fitted_on_black": {
+          "mae_cm": 1.63,
+          "p90_cm": 3.49,
+          "pct_within": 52.6,
+          "pct_within_2": 68.9,
+          "pct_within_3": 86.9,
+          "people": 656
+        }
+      },
+      "male": {
+        "kind": "basic",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi"
+        ],
+        "intercept": -19.292210993292073,
+        "coef": [
+          0.5931059504598607,
+          -0.04952203314301404,
+          -0.028771897965623898
+        ],
+        "mae_cm": 1.83,
+        "pct_within": 50.2,
+        "range_cm": [
+          67.7,
+          88.4
+        ],
+        "definition_match": "presumed",
+        "kept": true,
+        "general_on_black": {
+          "mae_cm": 2.83,
+          "p90_cm": 5.43,
+          "pct_within": 30.5,
+          "pct_within_2": 39.4,
+          "pct_within_3": 58.1,
+          "people": 642
+        },
+        "black_fitted_on_black": {
+          "mae_cm": 1.83,
+          "p90_cm": 3.73,
+          "pct_within": 50.2,
+          "pct_within_2": 62.5,
+          "pct_within_3": 81.9,
+          "people": 642
+        }
+      }
+    },
+    "hip_girth": {
+      "female": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist"
+        ],
+        "intercept": 12.611572488950884,
+        "coef": [
+          0.21820951747116596,
+          0.06467717920645874,
+          0.8766526892029496,
+          -0.08474905018575847,
+          0.02266246872654055,
+          -0.05993946437354678,
+          0.8244917403646885,
+          -0.20961771461566245,
+          -0.5542871346346812
+        ],
+        "mae_cm": 2.07,
+        "pct_within": 43.1,
+        "range_cm": [
+          86.7,
+          120.63000000000001
+        ],
+        "definition_match": "same",
+        "kept": true,
+        "general_on_black": {
+          "mae_cm": 2.13,
+          "p90_cm": 4.26,
+          "pct_within": 41.9,
+          "pct_within_2": 54.0,
+          "pct_within_3": 73.3,
+          "people": 656
+        },
+        "black_fitted_on_black": {
+          "mae_cm": 2.07,
+          "p90_cm": 4.27,
+          "pct_within": 43.1,
+          "pct_within_2": 58.4,
+          "pct_within_3": 76.5,
+          "people": 656
+        }
+      },
+      "male": {
+        "kind": "extended",
+        "inputs": [
+          "height_cm",
+          "weight_kg",
+          "bmi",
+          "chest",
+          "waist",
+          "shoulder-breadth",
+          "thigh",
+          "calf",
+          "wrist"
+        ],
+        "intercept": 2.6222407847326537,
+        "coef": [
+          0.1923657714510744,
+          0.014062107250967654,
+          0.6027306501200353,
+          -0.06755537701531904,
+          0.12573888896217347,
+          0.057673694775557914,
+          0.7208344830193754,
+          -0.0974040101400506,
+          -0.0963821447599832
+        ],
+        "mae_cm": 2.0,
+        "pct_within": 43.8,
+        "range_cm": [
+          86.181,
+          121.8
+        ],
+        "definition_match": "same",
+        "kept": true,
+        "general_on_black": {
+          "mae_cm": 2.11,
+          "p90_cm": 4.29,
+          "pct_within": 41.4,
+          "pct_within_2": 53.9,
+          "pct_within_3": 75.1,
+          "people": 642
+        },
+        "black_fitted_on_black": {
+          "mae_cm": 2.0,
+          "p90_cm": 3.99,
+          "pct_within": 43.8,
+          "pct_within_2": 57.2,
+          "pct_within_3": 76.5,
+          "people": 642
+        }
+      }
+    }
+  },
+  "prefer_black_fitted": true,
+  "level_ratios": {
+    "knee_from_floor": 0.277
+  },
+  "leg_check": {
+    "bodym_median_ratio": 0.455,
+    "ansur_median_ratio": 0.4807,
+    "difference": 0.0257,
+    "tolerance": 0.02,
+    "passed": false
+  }
+}

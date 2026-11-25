@@ -48,6 +48,10 @@ anthro geometry-fit --data bodym --cache GEO --out FIT    # S3b levels + correct
 anthro geometry-shape --data bodym --cache GEO --fit FIT  # S3c superellipse check
 anthro predict-silhouettes --front F --side S --height H --sex female --ckpt runs/r4/best.pt  # S7-0
 anthro read-export --folder anthro-export-...             # S7-0: check an app export (counts only)
+anthro ansur-fit --ansur DRIVE/ansur2 --report runs/r4/eval_report.json --out FORMULAS  # S5a
+anthro ansur-mix --data bodym --ckpt runs/r4/best.pt --formulas FORMULAS                  # S5a mix test
+anthro ansur-columns --ansur DRIVE/ansur2                                                 # S5b
+anthro geometry-rough --data bodym --ckpt runs/r4/best.pt                                 # S5b
 python scripts/sync_catalog.py APP/src/lib/measurements.ts --source "repo branch@commit"   # S7-0
 ```
 

@@ -91,6 +91,81 @@ class Input:
         return {"height": Estimate(ctx.person["height_cm"], self.name, "measured", "same")}
 
 
+class Ansur:
+    """S5a: formulas learned on ANSUR II (anthro.ansur) for the codes BodyM lacks; quality `derived`."""
+
+    name = "ansur"
+    BASIS = "ANSUR II held-out (5 folds by person), photo-model-sized input noise"
+
+    def __init__(self, formulas: dict):
+        self.doc = formulas
+
+    def estimate(self, ctx: Context) -> dict[str, Estimate]:
+        from . import ansur
+        out = {}
+        for code, by_sex in self.doc["formulas"].items():
+            f = by_sex.get(ctx.person["sex"])
+            if f is None:
+                continue
+            alt = self.doc.get("black_fitted", {}).get(code, {}).get(ctx.person["sex"])
+            black = bool(self.doc.get("prefer_black_fitted") and alt and alt.get("kept"))
+            if black:
+                f = alt                      # F2, switched on by Ryan (D-032)
+            if any(n not in ansur.BASIC and n not in ctx.bodym_cm for n in f["inputs"]):
+                continue                     # an extended formula needs photo-model values we don't have
+            value = ansur.apply(f, ctx.person, ctx.bodym_cm)
+            flags = list(ctx.flags) + (["fitted_on_ansur_black_participants"] if black else [])
+            lo, hi = f["range_cm"]
+            if not lo <= value <= hi:
+                flags.append("outside_formula_range")
+            out[code] = Estimate(value, self.name, "derived", f["definition_match"], f["mae_cm"],
+                                 self.BASIS, flags)
+        return out
+
+
+class Mix:
+    """S5a mix test: photo model and ANSUR basic estimate combined for chest/bust and waist, only where the
+    mix beat the photo model alone on validation people. Error shown: its Test-B score (D-028)."""
+
+    name = "mix"
+
+    def __init__(self, formulas: dict):
+        self.doc = formulas
+
+    def estimate(self, ctx: Context) -> dict[str, Estimate]:
+        from . import ansur
+        out = {}
+        male = ctx.person["sex"] == "male"
+        for name, m in self.doc.get("mix", {}).items():
+            if not m.get("kept") or name not in ctx.bodym_cm:
+                continue
+            rule = catalog.BODYM_TO_CODE[name]
+            code, match = rule.get(ctx.person["sex"], rule.get("*"))
+            a_cm = ansur.ansur_girth(self.doc, name, ctx.person)
+            value = ansur.mix_apply(m, ctx.bodym_cm[name], a_cm, male)
+            tb = (m.get("testB") or {}).get("mix")
+            err = tb["mae_cm"] if tb else None
+            basis = "BodyM testB, per-person average error (photo model + ANSUR mix)" if tb else None
+            out[code] = Estimate(value, self.name, "measured", match, err, basis, list(ctx.flags))
+        return out
+
+
+class Geometry:
+    """S5b: rough outline estimates (geometry_rough) for under-bust, high hip and knee; no error (D-034)."""
+
+    name = "geometry"
+    FLAGS = {"underbust_girth": "outline_below_chest", "high_hip_girth": "outline_between_waist_and_hip",
+             "knee_girth": "outline_knee_one_leg"}
+
+    def __init__(self, rough: dict[str, tuple[float | None, str]]):
+        self.rough = rough
+
+    def estimate(self, ctx: Context) -> dict[str, Estimate]:
+        return {code: Estimate(v, self.name, "rough", "presumed", None, None,
+                               [*ctx.flags, self.FLAGS.get(code, "outline")])
+                for code, (v, _why) in self.rough.items() if v is not None}
+
+
 def load_routing(path: str | Path | None = None) -> dict[str, list[str]]:
     text = (Path(path).read_text(encoding="utf-8") if path else
             resources.files("anthro").joinpath("data/routing_default.json").read_text(encoding="utf-8"))
