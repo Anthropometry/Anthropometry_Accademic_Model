@@ -1,0 +1,399 @@
+{
+  "catalogue_version": "anthropometrydc-measurements@807cd85",
+  "source": "Anthropometry/AnthropometryDC f8-admin-export@807cd85",
+  "adults_only": true,
+  "measurements": [
+    {
+      "code": "height",
+      "label": "Height",
+      "how": "Barefoot, back to the wall. Steel tape from the floor; straight edge flat on the head.",
+      "type": "length",
+      "adult_range_cm": [
+        130,
+        210
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": true
+    },
+    {
+      "code": "neck_girth",
+      "label": "Neck girth",
+      "how": "Around the base of the neck.",
+      "type": "girth",
+      "adult_range_cm": [
+        28,
+        55
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "shoulder_width",
+      "label": "Shoulder width",
+      "how": "Shoulder point to shoulder point, across the back.",
+      "type": "length",
+      "adult_range_cm": [
+        30,
+        60
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "shoulder_length",
+      "label": "Shoulder length",
+      "how": "Side of the neck to the shoulder point.",
+      "type": "length",
+      "adult_range_cm": [
+        9,
+        20
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "bust_girth",
+      "label": "Bust girth",
+      "how": "Around the fullest part of the bust, tape level.",
+      "type": "girth",
+      "adult_range_cm": [
+        65,
+        170
+      ],
+      "sexes": [
+        "female"
+      ],
+      "personal": true,
+      "taken_twice": true
+    },
+    {
+      "code": "underbust_girth",
+      "label": "Under-bust girth",
+      "how": "Around the ribcage just below the bust.",
+      "type": "girth",
+      "adult_range_cm": [
+        55,
+        150
+      ],
+      "sexes": [
+        "female"
+      ],
+      "personal": true,
+      "taken_twice": false
+    },
+    {
+      "code": "chest_girth",
+      "label": "Chest girth",
+      "how": "Around the fullest part of the chest, under the arms.",
+      "type": "girth",
+      "adult_range_cm": [
+        70,
+        160
+      ],
+      "sexes": [
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": true
+    },
+    {
+      "code": "bust_point_distance",
+      "label": "Bust point to bust point",
+      "how": "Straight across, from one bust point to the other.",
+      "type": "length",
+      "adult_range_cm": [
+        10,
+        30
+      ],
+      "sexes": [
+        "female"
+      ],
+      "personal": true,
+      "taken_twice": false
+    },
+    {
+      "code": "shoulder_to_bust_point",
+      "label": "Shoulder to bust point",
+      "how": "From the side of the neck down to the bust point.",
+      "type": "length",
+      "adult_range_cm": [
+        18,
+        40
+      ],
+      "sexes": [
+        "female"
+      ],
+      "personal": true,
+      "taken_twice": false
+    },
+    {
+      "code": "front_length",
+      "label": "Front length",
+      "how": "Side of the neck to the waist, at the front (over the bust for women).",
+      "type": "length",
+      "adult_range_cm": [
+        30,
+        60
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "back_length",
+      "label": "Back length",
+      "how": "From the neck bone at the back (nape) down to the waist.",
+      "type": "length",
+      "adult_range_cm": [
+        32,
+        55
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "waist_girth",
+      "label": "Waist girth",
+      "how": "Around the natural waist (the narrowest part).",
+      "type": "girth",
+      "adult_range_cm": [
+        50,
+        170
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": true
+    },
+    {
+      "code": "high_hip_girth",
+      "label": "High hip girth",
+      "how": "Around the body about 10 cm below the waist.",
+      "type": "girth",
+      "adult_range_cm": [
+        60,
+        175
+      ],
+      "sexes": [
+        "female"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "hip_girth",
+      "label": "Hip girth",
+      "how": "Around the fullest part of the hips.",
+      "type": "girth",
+      "adult_range_cm": [
+        70,
+        180
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": true
+    },
+    {
+      "code": "waist_to_hip",
+      "label": "Waist to hip",
+      "how": "At the side, from the waist down to the fullest part of the hip.",
+      "type": "length",
+      "adult_range_cm": [
+        12,
+        30
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "arm_length",
+      "label": "Arm length",
+      "how": "Shoulder point to wrist bone, arm hanging relaxed.",
+      "type": "length",
+      "adult_range_cm": [
+        45,
+        80
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "upper_arm_girth",
+      "label": "Upper arm girth",
+      "how": "Around the fullest part of the upper arm.",
+      "type": "girth",
+      "adult_range_cm": [
+        18,
+        60
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "wrist_girth",
+      "label": "Wrist girth",
+      "how": "Around the wrist, just above the wrist bone.",
+      "type": "girth",
+      "adult_range_cm": [
+        12,
+        24
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "inseam",
+      "label": "Inseam",
+      "how": "From the crotch down the inside of the leg to the ankle bone.",
+      "type": "length",
+      "adult_range_cm": [
+        60,
+        100
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": true,
+      "taken_twice": false
+    },
+    {
+      "code": "outseam",
+      "label": "Outseam",
+      "how": "From the waist down the side of the leg to the ankle bone.",
+      "type": "length",
+      "adult_range_cm": [
+        85,
+        125
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "thigh_girth",
+      "label": "Thigh girth",
+      "how": "Around the fullest part of the thigh.",
+      "type": "girth",
+      "adult_range_cm": [
+        35,
+        95
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "knee_girth",
+      "label": "Knee girth",
+      "how": "Around the middle of the knee.",
+      "type": "girth",
+      "adult_range_cm": [
+        28,
+        55
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "calf_girth",
+      "label": "Calf girth",
+      "how": "Around the fullest part of the calf.",
+      "type": "girth",
+      "adult_range_cm": [
+        25,
+        60
+      ],
+      "sexes": [
+        "female",
+        "male"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "waist_to_knee",
+      "label": "Waist to knee",
+      "how": "From the waist down to the middle of the knee (skirt length).",
+      "type": "length",
+      "adult_range_cm": [
+        45,
+        75
+      ],
+      "sexes": [
+        "female"
+      ],
+      "personal": false,
+      "taken_twice": false
+    },
+    {
+      "code": "shoulder_to_knee",
+      "label": "Shoulder to knee",
+      "how": "From the side of the neck at the shoulder down to the knee (dress length).",
+      "type": "length",
+      "adult_range_cm": [
+        80,
+        120
+      ],
+      "sexes": [
+        "female"
+      ],
+      "personal": false,
+      "taken_twice": false
+    }
+  ]
+}

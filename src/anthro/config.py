@@ -20,6 +20,10 @@ MEASUREMENTS: tuple[str, ...] = (
 # Supervisor's target: predictions within about ±1.5 cm (DISCUSSION D-002).
 TOLERANCE_CM = 1.5
 
+# D-029 (Ryan, 25 Nov 2026): the model's height must stay within this distance of the height the
+# person gave. Stated height: the estimate is held inside it. Measured height: a bigger gap warns.
+HEIGHT_AGREEMENT_CM = 2.0
+
 # Input columns as they appear in hwg_metadata.csv.
 HEIGHT_COL, WEIGHT_COL, SEX_COL, SUBJECT_COL, PHOTO_COL = (
     "height_cm", "weight_kg", "gender", "subject_id", "photo_id",
@@ -51,6 +55,21 @@ class TrainConfig:
     augment: bool = True
     seed: int = 0
     num_workers: int = 2
+    # S3b (D-017): "std" = L1 on standardised targets (run r1); "cm" = L1 in cm, so a 1 cm
+    # waist error costs the same as a 1 cm wrist error, matching how we score.
+    loss: str = "std"
+    # S3b (D-019): number of geometric features joined to the network (0 = r1's network).
+    n_geo: int = 0
+
+    def __post_init__(self) -> None:
+        if self.loss not in ("std", "cm"):
+            raise ValueError(f"loss must be 'std' or 'cm', not {self.loss!r}")
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+# Girths wrap around the body; lengths run along it. Reported separately (S3b, part C) because
+# they fail for different reasons: girths depend on cross-section shape, lengths on landmarks.
+GIRTHS: tuple[str, ...] = ("ankle", "bicep", "calf", "chest", "forearm", "hip", "thigh", "waist", "wrist")
+LENGTHS: tuple[str, ...] = tuple(m for m in MEASUREMENTS if m not in GIRTHS)

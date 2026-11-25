@@ -17,7 +17,7 @@ For this model, security means six things:
 | 3 | **Bad inputs** | An empty, partial or wrong image, or a mistyped height, gives a confident but meaningless answer | Silhouette checks, hard limits on height and weight, warnings outside the training range |
 | 4 | **Data integrity** | BodyM changes or a file is corrupted, and results silently stop being comparable | Data fingerprint stored in every checkpoint; `evaluate` warns on mismatch; tables validated on load |
 | 5 | **Supply chain** | A compromised package or model download | Only well-known packages, listed in `pyproject.toml`; pre-trained weights only from torchvision; new dependencies need Ryan's approval; secret scan in CI |
-| 6 | **Licences and misuse** | BodyM or SMPL-X used or redistributed against their licences | Never committed (`.gitignore`); non-commercial use documented in NORTH_ANCHOR.md |
+| 6 | **Licences and misuse** | BodyM or SMPL-X used or redistributed against their licences | Never committed (`.gitignore`); non-commercial use documented in specs/mission.md |
 
 ## Threats specific to trained models, and our level of concern
 
