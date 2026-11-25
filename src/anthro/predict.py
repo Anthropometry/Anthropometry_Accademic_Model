@@ -32,7 +32,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from . import catalog, checkpoint, output, suppliers, typical_weight
+from . import catalog, checkpoint, geometry_rough, output, suppliers, typical_weight
 from . import geometry as geo
 from . import geometry_fit as gfit
 from .config import HEIGHT_AGREEMENT_CM, HEIGHT_COL, MEASUREMENTS, SEX_COL, SUBJECT_COL, WEIGHT_COL
@@ -129,6 +129,51 @@ def retake_check(values: dict, table, threshold: float | None) -> list[str]:
     return []
 
 
+def rough_estimates(front, side, person, geo_fit, formulas) -> dict:
+    """S5b outline estimates; empty when the checkpoint has no geometry fit (non-hybrid models)."""
+    if geo_fit is None:
+        return {}
+    ratio = ((formulas or {}).get("level_ratios") or {}).get("knee_from_floor",
+                                                             geometry_rough.KNEE_FROM_FLOOR_TEXTBOOK)
+    return geometry_rough.estimate(load_mask(front), load_mask(side), person, geo_fit, ratio)
+
+
+def sanity_checks(estimates: dict, sex: str, rough: dict) -> tuple[dict, list[str]]:
+    """S5b: rough values outside the app's adult range are withheld; out-of-order ones are flagged."""
+    out, notes = dict(estimates), []
+    labels = catalog.by_code()
+    for code, (value, why) in rough.items():
+        if value is None and code in catalog.codes_for(sex):
+            notes.append(f"{labels[code]['label'].lower()} not available: {why}")
+    for code, e in estimates.items():
+        if e.quality != "rough":
+            continue
+        lo, hi = labels[code]["adult_range_cm"]
+        if not lo <= e.value_cm <= hi:
+            out[code] = output.NOT_AVAILABLE
+            notes.append(f"{labels[code]['label'].lower()} withheld: the outline gave {e.value_cm:.1f} cm, "
+                         f"outside the adult range {lo}-{hi} cm")
+
+    def v(code):
+        e = out.get(code)
+        return e.value_cm if e is not None and e.value_cm is not None else None
+
+    checks = [("underbust_girth", lambda u: v("bust_girth") is None or u < v("bust_girth"),
+               "under-bust came out larger than bust"),
+              ("high_hip_girth", lambda x: (v("waist_girth") is None or x > v("waist_girth"))
+               and (v("hip_girth") is None or x < v("hip_girth")),
+               "high hip came out outside the waist-to-hip range")]
+    for code, ok, rule in checks:
+        e = out.get(code)
+        if e is not None and e.quality == "rough" and not ok(e.value_cm):
+            e.flags = [*e.flags, "order_check_failed"]
+            # Some bodies really have this shape (e.g. a belly larger than the hips), so this is a prompt
+            # to check, never a reason to withhold the value.
+            notes.append(f"{labels[code]['label'].lower()}: {rule}. This can be a real body shape (for "
+                         "example a belly larger than the hips) or an outline error: check it with a tape")
+    return out, notes
+
+
 def height_warnings(person: dict, model_height_cm: float) -> list[str]:
     """D-029: the model's height estimate should agree with the given height within 2 cm."""
     gap = model_height_cm - person["height_cm"]
@@ -185,7 +230,11 @@ def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, h
     formulas = load_ansur(ansur_path) if use_ansur else None
     if formulas is not None:
         chain += [suppliers.Ansur(formulas), suppliers.Mix(formulas)]
+    rough = rough_estimates(front, side, person, ck.get("geo_fit"), formulas)
+    chain.append(suppliers.Geometry(rough))
     estimates = suppliers.route(ctx, chain, suppliers.load_routing(routing_path))
+    estimates, notes = sanity_checks(estimates, person["sex"], rough)
+    warnings += notes
     if any("fitted_on_ansur_black_participants" in e.flags for e in estimates.values()):
         warnings.append("inseam and hip use formulas fitted on ANSUR's Black participants (closer to "
                         "Ghanaian users; D-032); replaced once Ghanaian tape data exists")

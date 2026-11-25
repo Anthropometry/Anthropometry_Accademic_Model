@@ -4,6 +4,7 @@ Problems met while building, what caused them and what fixed them. Newest first.
 
 | Date | Challenge | Cause | Fix | Where |
 | --- | --- | --- | --- | --- |
+| 25 Nov 2026 | Front length showed "not available" although ANSUR's formula was fitted | The routing table listed only geometry for front length, so the ANSUR value was never asked for | Routing: own model, calibration, ANSUR, then geometry; a test checks the order | src/anthro/data/routing_default.json |
 | 25 Nov 2026 | Notebook 05: `ANSUR II MALE Public.csv not found` | The loader wanted the exact published file name; downloads often differ (underscores, case, zipped) | Usual name variants and one-file zips accepted; a miss lists what the folder holds | src/anthro/ansur.py |
 | 25 Nov 2026 | A unit mistake in one ANSUR file went unnoticed | The plausibility check looked at both files together, so the good file's median hid the bad one | Checked per file, naming the file; caught by a test | src/anthro/ansur.py |
 | 25 Nov 2026 | Notebook 04 cell 5: `syntax error near unexpected token '('` | Colab fills `{...}` in a `!` line only if every one works; a function call and a number format inside braces failed, so the raw text reached the shell | Values worked out in Python first; the `!` line uses plain names only | notebooks/04_s7_predict.ipynb |

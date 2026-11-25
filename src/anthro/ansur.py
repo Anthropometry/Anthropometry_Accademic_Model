@@ -59,6 +59,12 @@ TARGETS: dict[str, tuple[tuple[str, ...], str]] = {
     "waist_to_knee": (("waistheightomphalion", "-kneeheightmidpatella"), "differs"),
     "shoulder_to_knee": (("acromialheight", "-kneeheightmidpatella"), "differs"),   # D-031
 }
+# S5b / D-033: used only when the column exists in both files (seated, so `differs`).
+OPTIONAL_TARGETS: dict[str, tuple[tuple[str, ...], str]] = {
+    "front_length": (("waistfrontlengthsitting",), "differs"),
+}
+# S5b: words that point at ANSUR columns possibly matching the last app codes (anthro ansur-columns).
+CANDIDATE_WORDS = ("breast", "bust", "knee", "front", "hip", "thigh")
 # Photo-model output (BodyM name) -> ANSUR column measuring the same thing on tape (extended formulas).
 PHOTO_INPUTS = {
     "chest": "chestcircumference", "waist": "waistcircumference", "shoulder-breadth": "biacromialbreadth",
@@ -132,9 +138,10 @@ def load(folder: str | Path) -> pd.DataFrame:
         missing = needed_columns() - set(df.columns)
         if missing:
             raise AnsurError(f"{name} is missing columns: {', '.join(sorted(missing))}")
-        df = df[sorted(needed_columns())].copy()
+        optional = sorted({c for parts, _ in OPTIONAL_TARGETS.values() for c in parts} & set(df.columns))
+        df = df[sorted(needed_columns()) + optional].copy()
         df["sex"] = sex
-        mm = sorted(needed_columns() - set(OTHER)) + ["stature"]
+        mm = sorted(needed_columns() - set(OTHER)) + ["stature"] + optional
         df[mm] = df[mm].astype(float) / 10.0                   # mm -> cm
         med = df[mm].median()                                   # checked per file: one bad file can't hide
         bad = med[(med < PLAUSIBLE_MEDIAN_CM[0]) | (med > PLAUSIBLE_MEDIAN_CM[1])]
@@ -149,9 +156,36 @@ def load(folder: str | Path) -> pd.DataFrame:
     df["stated_weight_kg"] = df["weightlbs"].astype(float) * 0.45359237
     if df["subjectid"].duplicated().any():
         raise AnsurError("a subject appears twice across the two files")
-    for code, (parts, _) in TARGETS.items():
-        df[code] = sum((-df[c[1:]] if c.startswith("-") else df[c]) for c in parts)
+    for code, (parts, _) in all_targets().items():
+        if all(c.lstrip("-") in df.columns and df[c.lstrip("-")].notna().all() for c in parts):
+            df[code] = sum((-df[c[1:]] if c.startswith("-") else df[c]) for c in parts)
     return df.reset_index(drop=True)
+
+
+def all_targets() -> dict[str, tuple[tuple[str, ...], str]]:
+    return {**TARGETS, **OPTIONAL_TARGETS}
+
+
+def present_targets(df: pd.DataFrame) -> list[str]:
+    """Codes this ANSUR table can supply (optional ones only when their column was in both files)."""
+    return [c for c in all_targets() if c in df.columns]
+
+
+def candidate_columns(folder: str | Path) -> pd.DataFrame:
+    """S5b step 1: columns whose names suggest a match for the last app codes; counts and medians only."""
+    rows = []
+    for sex in FILES:
+        p = find_file(Path(folder), sex)
+        try:
+            df = pd.read_csv(p)
+        except UnicodeDecodeError:
+            df = pd.read_csv(p, encoding="latin-1")
+        for c in df.columns:
+            name = c.strip().lower()
+            if any(w in name for w in CANDIDATE_WORDS) and pd.api.types.is_numeric_dtype(df[c]):
+                rows.append({"column": name, "sex": sex, "people": int(df[c].notna().sum()),
+                             "median_cm": round(float(df[c].median()) / 10, 1)})
+    return pd.DataFrame(rows)
 
 
 def folds(df: pd.DataFrame, k: int = FOLDS, seed: int = 0) -> np.ndarray:
@@ -202,7 +236,7 @@ def cv_errors(df: pd.DataFrame, target: str, inputs: list[str], noise=None, seed
 
 
 def extended_inputs(code: str) -> list[str]:
-    own = TARGETS[code][0][0]
+    own = all_targets()[code][0][0]
     return [*BASIC, *[n for n, col in PHOTO_INPUTS.items() if col != own]]
 
 
@@ -221,7 +255,7 @@ def fit(df: pd.DataFrame, noise: dict[str, float], catalogue_version: str, data_
     """Formulas (plain numbers) and a score table for printing. With leg_ok (F1 check passed), leg codes
     also try "extended + leg"."""
     formulas, rows = {}, []
-    for code in TARGETS:
+    for code in present_targets(df):
         formulas[code] = {}
         for sex in catalog.SEXES:
             if sex not in catalog.by_code()[code]["sexes"]:
@@ -250,7 +284,7 @@ def fit(df: pd.DataFrame, noise: dict[str, float], catalogue_version: str, data_
                 "coef": [float(c) for c in m.coef_], "mae_cm": _scores(err)["mae_cm"],
                 "pct_within": _scores(err)["pct_within"],
                 "range_cm": [float(np.quantile(y, 0.01)), float(np.quantile(y, 0.99))],
-                "definition_match": TARGETS[code][1],
+                "definition_match": all_targets()[code][1],
             }
             labels = {"basic": "basic", "extended": "extended, blurred",
                       "extended + leg": "extended + leg, blurred"}
@@ -261,8 +295,15 @@ def fit(df: pd.DataFrame, noise: dict[str, float], catalogue_version: str, data_
     doc = {"format": FORMAT, "catalogue": catalogue_version, "ansur_fingerprint": data_fp,
            "noise_basis": noise_basis, "noise_mae_cm": {k: float(v) for k, v in noise.items()},
            "girth_basic": girth_basic(df), "formulas": formulas, "mix": {},
-           "black_fitted": {}, "prefer_black_fitted": False}
+           # D-032 (Ryan, 25 Nov 2026): Black-fitted formulas are used wherever F2 kept them.
+           "black_fitted": {}, "prefer_black_fitted": True,
+           # S5b: knee height for the outline knee girth, from ANSUR rather than a textbook value.
+           "level_ratios": {"knee_from_floor": knee_ratio(df)}}
     return doc, pd.DataFrame(rows)
+
+
+def knee_ratio(df: pd.DataFrame) -> float:
+    return round(float((df["kneeheightmidpatella"] / df["stature"]).median()), 4)
 
 
 def girth_basic(df: pd.DataFrame) -> dict:
@@ -330,7 +371,7 @@ def self_report_check(df: pd.DataFrame) -> pd.DataFrame:
     stated = df.assign(height_cm=df["stated_height_cm"], weight_kg=df["stated_weight_kg"])
     stated["bmi"] = stated["weight_kg"] / (stated["height_cm"] / 100) ** 2
     ok = stated[["height_cm", "weight_kg"]].notna().all(axis=1).to_numpy()
-    for code in TARGETS:
+    for code in present_targets(df):
         for sex in catalog.SEXES:
             if sex not in catalog.by_code()[code]["sexes"]:
                 continue

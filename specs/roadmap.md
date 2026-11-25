@@ -63,7 +63,7 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 
 - S7a predict pipeline: photo → silhouette → measurements (needs a segmentation model: new dependency)
 - S5a ANSUR II supplier (D-024; licence checked 25 Nov 2026) — done 25 Nov 2026 (formulas packaged; mix not kept; F1 failed its check; F2 Black-fitted inseam and hip in use, D-032)
-- S5b outline-geometry supplier for rough estimates (high hip, knee, under-bust, front length)
+- S5b rough estimates for under-bust, front length, high hip, knee (ANSUR first, then outline geometry) — built 25 Nov 2026, waiting for Ryan's Colab run (notebook 06)
 - S8 train on the app's data (missing values allowed, both weights, clothing)
 
 ## S5 SMPL-X extras — set aside (D-026, 24 Nov 2026)
