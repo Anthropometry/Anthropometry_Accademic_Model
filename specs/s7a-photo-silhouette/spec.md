@@ -1,6 +1,7 @@
 # S7a: from a real phone photo to the full measurement set
 
-**Status:** draft, 25 Nov 2026. Waiting for Ryan's approval (includes a new dependency: question 1).
+**Status:** approved by Ryan, 25 Nov 2026 (test both tools, D-043; side direction detected and mirrored
+automatically, D-044). Question 4 (test people) explained again, answer pending: it does not block the build.
 **Branch:** `s7a-photo-silhouette`
 
 ## Goal (one sentence)
@@ -122,7 +123,12 @@ real numbers on Ghanaian bodies (reported as a small pilot, not a result).
   values exist, report per-person errors: the bridge to S6/S8 (calibration and training on Ghanaian data).
 - Update notebooks 05 and 06 to clone `main` (they still point at the merged feature branches).
 
-## Open questions for Ryan
+## Ryan's answers (25 Nov 2026)
+
+1. Test both A and B (D-043). 2. Approved. 3. Not sure which shoulder faces the camera: the code detects the
+direction and mirrors when needed (D-044). 4. Pending (explained again in plain words).
+
+## Questions as asked
 
 1. **New dependency:** approve testing both candidates (A needs only a weight download; B adds `rembg` and
    `onnxruntime`), or A only?
