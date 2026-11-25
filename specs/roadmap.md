@@ -1,7 +1,7 @@
 # Roadmap
 
 Seven steps in order, one pull request per step. A step is ticked only after Ryan has run it on the
-real data and its numbers are in [RESULTS.md](RESULTS.md).
+real data and its numbers are in [RESULTS.md](../docs/RESULTS.md).
 
 ```
 S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X extras
@@ -22,14 +22,14 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 ## S3 Photo model — first run done, 15 Nov 2026 (run r1)
 
 - [x] `anthro train` / `anthro evaluate` built and tested on fake data
-- [x] Ryan approved specs/S3-photo-model.md (15 Nov 2026)
+- [x] Ryan approved specs/s3-photo-model/spec.md (15 Nov 2026)
 - [x] First full run on a Colab T4; per-person Test-A / Test-B tables in RESULTS.md
 - [x] Epoch log added to RESULTS.md (best: epoch 25, val MAE 1.02 cm)
 - [ ] Seeds 1 and 2 to measure run-to-run variation (about 7 min each)
 
 ## S3b Geometric girth + training fixes — done 17 Nov 2026 (final: r4; Test-A up, Test-B unchanged)
 
-- [x] Ryan approved specs/S3b-geometric-girth.md (D-017 to D-020), 17 Nov 2026
+- [x] Ryan approved specs/s3b-geometric-girth/spec.md (D-017 to D-020), 17 Nov 2026
 - [x] A1 loss in cm · A2 512×256 images (built, tested on fake data)
 - [x] Geometry: width, depth, ellipse, levels, correction, fullness, flags (built)
 - [x] E0–E2 on real BodyM (three fits; levels: chest at armpit, waist narrowest 36–49%, hip fixed 52%)
@@ -37,7 +37,13 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [x] E3a (r2), E3b (r3), E4 (r4) compared on validation; r4 chosen
 - [x] Final Test-A / Test-B scored once on r4 (RESULTS.md)
 - [ ] Proposed next: capture-variation augmentation + repeat seeds (needs a spec)
-- Execution prompt: docs/prompts/S3b-execute.md
+- Execution prompt: specs/s3b-geometric-girth/execute-prompt.md
+
+## S3c Shape check (superellipse) — done 19 Nov 2026
+
+- [x] Spec approved (specs/s3c-shape-check/spec.md, D-023)
+- [x] `anthro geometry-shape`: k vs D/W and front/back; oval × k vs + front/back vs superellipse
+- [x] Real run on BodyM (19 Nov): superellipse tested, no gain; oval × k stays (RESULTS.md)
 
 ## S4 Compare photo model vs baseline
 
@@ -46,7 +52,21 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [ ] Lengths and girths reported separately
 - [x] Consistency across a person's photos
 
-## S5 SMPL-X extras
+## S7-0 Foundation for the full measurement set and our own data — built 25 Nov 2026, waiting for a Colab run
+
+- [x] Spec approved (specs/s7-0-foundation/spec.md)
+- [x] Catalogue from the app's codes; output format anthro-output/1; suppliers + routing; export loader
+- [x] `anthro predict-silhouettes` and `anthro read-export`; notebooks/04_s7_predict.ipynb
+- [ ] Ryan's Colab run of notebook 04 with r4
+
+## Next after S7-0
+
+- S7a predict pipeline: photo → silhouette → measurements (needs a segmentation model: new dependency)
+- S5a ANSUR II supplier (D-024; licence check first)
+- S5b outline-geometry supplier for rough estimates (high hip, knee, under-bust, front length)
+- S8 train on the app's data (missing values allowed, both weights, clothing)
+
+## S5 SMPL-X extras — set aside (D-026, 24 Nov 2026)
 
 - [ ] Fit SMPL-X shape to the predicted (or corrected) measurements + height + weight
 - [ ] Virtual tape for neck, armhole, back length, rise; inconsistency flag when no plausible body fits

@@ -1,6 +1,6 @@
 <!-- Anthropometry Academic Model — student research project at Ashesi University. Fill in every section. -->
 
-**Spec:** specs/S#-… (status: approved) · **Step:** S#
+**Spec:** specs/<step>/spec.md (status: approved) · **Step:** S#
 
 ## What changed
 

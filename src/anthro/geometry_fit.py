@@ -1,6 +1,6 @@
 """S3b — cache geometry for every photo pair, tune the levels, learn the ellipse correction.
 
-specs/S3b-geometric-girth.md, experiments E0-E2 (approved 17 Nov 2026).
+specs/s3b-geometric-girth/spec.md, experiments E0-E2 (approved 17 Nov 2026).
 
 What it does
 ------------
@@ -96,19 +96,13 @@ def build_cache(df: pd.DataFrame, root: str | Path, cache_dir: str | Path, split
         d = Path(root) / row.split
         pid = getattr(row, PHOTO_COL)
         try:
-            raw_f = _load_raw(d / "mask" / f"{pid}.png")
-            front = load_mask(d / "mask" / f"{pid}.png")     # refuses oversized images
-            side = load_mask(d / "mask_left" / f"{pid}.png")
-            p = geo.profile(front, side, getattr(row, HEIGHT_COL))
+            m = measure_pair(d / "mask" / f"{pid}.png", d / "mask_left" / f"{pid}.png",
+                             getattr(row, HEIGHT_COL))
         except geo.GeometryError as e:
             errors[str(e)] = errors.get(str(e), 0) + 1
             continue
-        for k in _PROFILE_KEYS:
-            out[k][i] = p[k]
-        out["mask_px_height"][i] = p["mask_px_height"]
-        out["sil_volume_l"][i] = p["sil_volume_l"]
-        out["edge_soft"][i] = geo.edge_softness(raw_f)
-        out["mask_h"][i], out["mask_w"][i] = front.shape
+        for k in (*_PROFILE_KEYS, *_SCALAR_KEYS):
+            out[k][i] = m[k]
         out["ok"][i] = True
     out["photo_id"] = df[PHOTO_COL].astype(str).to_numpy().astype("U")
     out["subject_id"] = df[SUBJECT_COL].astype(str).to_numpy().astype("U")
@@ -119,6 +113,30 @@ def build_cache(df: pd.DataFrame, root: str | Path, cache_dir: str | Path, split
         for msg, k in sorted(errors.items(), key=lambda x: -x[1]):
             print(f"  {k:5d}  {msg}")
     return out
+
+
+def measure_pair(front_path, side_path, height_cm: float) -> dict:
+    """Width/depth profile and body features of one photo pair (raises geo.GeometryError).
+    Shared by the cache builder and by single-person prediction (S7-0), so both measure alike."""
+    raw_f = _load_raw(Path(front_path))
+    front = load_mask(front_path)     # refuses oversized images
+    side = load_mask(side_path)
+    p = geo.profile(front, side, height_cm)
+    m = {k: p[k] for k in _PROFILE_KEYS}
+    m.update(mask_px_height=p["mask_px_height"], sil_volume_l=p["sil_volume_l"],
+             edge_soft=geo.edge_softness(raw_f), mask_h=front.shape[0], mask_w=front.shape[1])
+    return m
+
+
+def single_cache(m: dict | None) -> dict:
+    """A one-row cache (the layout `level_table` reads) from `measure_pair`; None = unmeasurable."""
+    c = {k: np.zeros((1, geo.N_ROWS), np.uint8 if k == "n_runs" else np.float32) for k in _PROFILE_KEYS}
+    c.update({k: np.zeros(1, np.float32) for k in _SCALAR_KEYS})
+    c["ok"] = np.array([m is not None])
+    if m is not None:
+        for k in (*_PROFILE_KEYS, *_SCALAR_KEYS):
+            c[k][0] = m[k]
+    return c
 
 
 def _load_raw(path: Path) -> np.ndarray:

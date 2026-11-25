@@ -1,6 +1,6 @@
 """S3b — measure width and depth from silhouettes and turn them into circumferences.
 
-specs/S3b-geometric-girth.md (approved 17 Nov 2026).
+specs/s3b-geometric-girth/spec.md (approved 17 Nov 2026).
 
 What it does
 ------------

@@ -1,7 +1,7 @@
 # Prompt: execute S3b (geometric girth step + training fixes)
 
 Paste everything below the line into a new Claude Code session that has this repository attached.
-Use it only after Ryan has marked `specs/S3b-geometric-girth.md` as **approved**.
+Use it only after Ryan has marked `specs/s3b-geometric-girth/spec.md` as **approved**.
 
 ---
 
@@ -12,8 +12,8 @@ silhouette plus height, weight and sex, and outputs 14 body measurements in cm. 
 
 ## 0. Before writing any code
 
-1. Read `CLAUDE.md`, `POLICY.md`, `docs/NORTH_ANCHOR.md`, `docs/ROADMAP.md`, the newest 8 rows of
-   `DISCUSSION.md`, `docs/RESULTS.md` (run r1) and `specs/S3b-geometric-girth.md`.
+1. Read `CLAUDE.md`, `specs/policy.md`, `specs/mission.md`, `specs/roadmap.md`, the newest 8 rows of
+   `specs/discussions.md`, `docs/RESULTS.md` (run r1) and `specs/s3b-geometric-girth/spec.md`.
 2. Check the spec's **Status** line. If it does not say approved by Ryan, stop. Tell Ryan which of
    D-017 to D-020 still need his answer. Write no code.
 3. Check out branch `s3b-geometric-girth` (create it from the newest `s1-s3-model-pipeline` if it
@@ -122,9 +122,9 @@ silhouette plus height, weight and sex, and outputs 14 body measurements in cm. 
   - final: `anthro evaluate --bootstrap 1000` on the chosen run.
 
   Each cell says what to paste back.
-- `docs/ROADMAP.md`: tick items as they are built; mark experiments "waiting for Ryan's run".
+- `specs/roadmap.md`: tick items as they are built; mark experiments "waiting for Ryan's run".
 - `docs/CHALLENGES.md`: record each problem met and its fix.
-- `DISCUSSION.md`: no new decisions without Ryan. Record his answers to D-017 to D-020 when given.
+- `specs/discussions.md`: no new decisions without Ryan. Record his answers to D-017 to D-020 when given.
 - `docs/RESULTS.md`: leave empty for S3b until Ryan pastes real outputs.
 
 ## 4. Finish

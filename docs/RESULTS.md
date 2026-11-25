@@ -2,6 +2,65 @@
 
 Only numbers from Ryan's real runs go here, each with its date, data fingerprint and commit.
 
+## S3c — Shape check: superellipse vs oval correction (19 Nov 2026, commit 34dec41)
+
+1,816 training people (validation excluded), 5-fold CV grouped by person, per person.
+
+### Does the oval's error k follow the body's shape?
+
+| Level | corr(k, D/W) | k by D/W, lowest → highest fifth | corr(k, front/back) | k by front/back, lowest → highest fifth | Boxiness n matching each person: median (10th–90th pct) | n at the 1.5/8 limits |
+| --- | ---: | --- | ---: | --- | --- | ---: |
+| chest | +0.25 | 1.135 · 1.146 · 1.146 · 1.137 · 1.116 | −0.13 | 1.160 · 1.139 · 1.133 · 1.125 · 1.123 | 5.0 (2.5–8.0) | 23.3% |
+| waist | +0.08 | 1.116 · 1.110 · 1.104 · 1.091 · 1.045 | −0.23 | 1.116 · 1.102 · 1.097 · 1.078 · 1.072 | 3.6 (2.2–5.8) | 5.4% |
+| hip | −0.30 | 1.099 · 1.085 · 1.077 · 1.070 · 1.037 | +0.14 | 1.060 · 1.074 · 1.075 · 1.077 · 1.081 | 3.1 (2.1–4.9) | 3.6% |
+
+### Three corrections compared (CV MAE cm / % within ±1.5 cm)
+
+| Level | A oval × k (current) | B + front/back | C superellipse (n learned) | Baseline h+w+sex |
+| --- | --- | --- | --- | --- |
+| chest | **3.37** / 28.6 | 3.38 / 27.9 | 3.41 / 28.4 | 3.03 / 32.3 |
+| waist | **2.67** / 37.6 | 2.67 / 37.7 | 2.73 / 38.8 | 3.51 / 28.4 |
+| hip | 2.84 / 36.7 | **2.76** / 37.3 | 2.90 / 34.8 | 2.23 / 42.7 |
+
+Reading:
+- **Real cross-sections are boxier than ovals:** the boxiness that matches each person is about
+  3 (hip), 3.6 (waist) and 5 (chest), against 2 for an oval. The chest often reaches the limit
+  (23%): its outline (hollows, shoulder blades) is not well described by any superellipse.
+- **k does follow shape, weakly** (correlations 0.08–0.30), but the current correction already
+  uses D/W, so modelling the shape explicitly adds nothing: no variant beats A by the 0.1 cm the
+  spec required (best: hip with the front/back term, −0.08 cm).
+- **The boxiness varies from person to person, and the features cannot predict it**, which is
+  why the superellipse (C) is no better than a single learned factor.
+- Larger bodies are measured worst by every variant (BMI 35+: chest 5.1 cm, waist 4.1 cm).
+- **Decision (per spec): superellipse tested, no gain.** The current oval × k stays.
+
+## S3b — r4 retrained with the same settings, test scored a second time (19 Nov 2026)
+
+Notebook 03 was rerun, which retrained r4 with identical settings (seed 0) and overwrote the first
+r4. GPU training is not exactly repeatable, so this is a second draw of the same recipe. Recorded
+as a measure of run-to-run variation, **not** as a second candidate (no choice is made from it).
+
+| % within ±1.5 cm | r1 | r4 first run (17 Nov) | r4 second run (19 Nov) |
+| --- | ---: | ---: | ---: |
+| Test-A waist | 63.2 | 70.1 | 58.6 |
+| Test-A hip | 72.4 | 63.2 | 73.6 |
+| Test-A chest | 56.3 | 57.5 | 52.9 |
+| Test-A mean of 14 | 83.5 | 84.0 | 83.3 |
+| Test-A mean MAE (cm) | 0.88 | 0.84 | 0.89 |
+| Test-B mean of 14 | 74.5 | 74.2 | 73.0 |
+| Test-B mean MAE (cm) | 1.22 | 1.22 | 1.27 |
+| Retake: flagged A / B | — | 8% / 32% | 9% / 33% |
+| Retake: all-14 % not flagged vs flagged, Test-B | — | 76.6 vs 69.1 | 74.4 vs 70.0 |
+| Test-B women BMI 35+ (23 people) | 52.8 | 53.7 | 53.4 |
+
+Reading:
+- **Same recipe, two runs: waist 70 vs 59, hip 63 vs 74 on Test-A.** Single-measurement changes of
+  ~10 points between runs are chance, so the earlier "waist 63 → 70" gain is **not** an
+  improvement over r1. On average, r4 performs like r1 on both test sets.
+- **What repeats:** the retake warning (fires ~9% A, ~33% B; flagged people measured worse), the
+  BMI 35+ gap, and the overall level (~83% A, ~73–74% B).
+- Consequence: report averages over several runs (seeds) before claiming any gain.
+
 ## S3b — Final test, scored once: run r4 on Test-A and Test-B (17 Nov 2026)
 
 Run r4 (cm loss, 512×256 images, 25 geometric features), chosen on validation before this run.
