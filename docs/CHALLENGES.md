@@ -1,0 +1,29 @@
+# Challenges and fixes
+
+Problems met while building, what caused them and what fixed them. Newest first.
+
+| Date | Challenge | Cause | Fix | Where |
+| --- | --- | --- | --- | --- |
+| 25 Nov 2026 | CI secret scan failed on every pull request since 19 Nov (tests themselves passed) | The gitleaks GitHub Action now requires a paid licence for organisation accounts | Run the free gitleaks program directly, pinned to v8.21.2: same tool, same check | .github/workflows/ci.yml |
+| 25 Nov 2026 | Changing one person's record in a test changed an already-built result | The result stored a reference to the caller's person record, not a copy | The result keeps its own copy; caught by the output tests | src/anthro/output.py |
+| 25 Nov 2026 | The first printed result showed the model's guess for height although a tape height was typed | Height was routed to the photo model like any other measurement | Measured height is returned as given (`input` source); stated height estimated but held within 2 cm of it (D-029, approved) | src/anthro/suppliers.py |
+| 25 Nov 2026 | r1–r4 checkpoints can't fill a missing weight | They were trained before the typical-weight line was stored | New checkpoints store it; for old ones `--data` refits it from BodyM's training table | src/anthro/predict.py |
+| 19 Nov 2026 | A notebook rerun retrained r4 and overwrote the first r4 model | "Run all" reruns training cells; `anthro train` writes into an existing run folder | Second run recorded as run-to-run variation; proposed: training refuses an existing run folder unless told to overwrite | notebooks/, docs/RESULTS.md |
+| 17 Nov 2026 | Waist improved as an ellipse but got worse after correction; hip still at an edge | Levels were scored with a straight line on C0, not the correction used afterwards; hip matched a fixed height better than "deepest point" | Score levels with the full correction; waist and hip also try fixed heights | src/anthro/geometry_fit.py |
+| 17 Nov 2026 | Level search chose the edge of its grid for chest, waist and hip | Grid set from textbook proportions; BodyM's levels (SMPL vertex loops) sit elsewhere | Wider grid; `geometry-fit` warns when a choice is at the edge | src/anthro/geometry_fit.py |
+| 17 Nov 2026 | Choosing between runs needed per-measurement scores | Training logged only the overall validation error, so chest/waist could only be compared on Test-A/B (dishonest) | Training prints and saves per-measurement validation scores at the best epoch | src/anthro/train.py |
+| 17 Nov 2026 | Geometry fit could leak into model selection | Fitting the correction on all training people includes the validation people that pick the best epoch | Fit excludes them (same seed and fraction); training refuses a fit from a different split | src/anthro/geometry_fit.py, train.py |
+| 17 Nov 2026 | Geometry cache would need pickle to load | Photo ids are strings; numpy stores string lists as objects | Store ids as fixed-width unicode arrays; load with `allow_pickle=False` | src/anthro/geometry_fit.py |
+| 17 Nov 2026 | Per-row loops too slow for ~9,000 pairs × hundreds of band settings | Python loop over rows and profiles | Whole-array numpy for runs, widths, depths and level search | src/anthro/geometry.py |
+| 16 Nov 2026 | Chest and waist far below the other measurements in r1 | Standardised loss made a 10 cm waist error cost the same as a 1 cm wrist error; 0.7 cm pixels | Loss in cm (D-017); 512×256 option (D-018) | src/anthro/train.py |
+| 15 Nov 2026 | Colab clone failed with a certificate error | Notebook pointed at a mirror host instead of github.com | Repository URL fixed; branch default set to the PR branch | notebooks/ |
+| 15 Nov 2026 | Consistency check printed `NaN` | Spread needs 2+ photos of a person; some splits have only one | Clear message instead of `NaN` | src/anthro/cli.py |
+| 15 Nov 2026 | First notebook loaded checkpoints with `weights_only=False` | Normalisation statistics were stored as numpy arrays | Store them as plain lists; load with `weights_only=True`; test that a code-carrying file is refused | src/anthro/checkpoint.py, tests/test_train_smoke.py |
+| 15 Nov 2026 | Baseline fix "didn't work": identical numbers after the change | The fix lines ran *before* the line that reassigned the tables, so they were overwritten | Rebuilt the cell with the de-duplication after table selection, plus a printed people count as a check | notebooks, src/anthro/baseline.py |
+| 15 Nov 2026 | Baseline scored per photo, not per person | Joining the tables gives one row per photo pair; Test-A has ~19 per person | Score on one row per person; average a person's photo predictions (D-007) | src/anthro/evaluate.py |
+| 15 Nov 2026 | Two "height" columns | `height_cm` is the entered height (input); `height` is scan head-to-heel (answer) | Scan height is never an input; documented in data.py | src/anthro/data.py |
+| 15 Nov 2026 | Data re-downloaded after every Colab disconnect | Colab storage is wiped when the runtime ends | Keep one `.tar` on Drive, unpack per session (D-010) | notebooks/ |
+| 15 Nov 2026 | Slow image loading | ~12,000 PNGs read every epoch | Prepare once, cache as one `.npy` per split, keyed by size and data fingerprint | src/anthro/dataset.py |
+| 14 Nov 2026 | No BMnet model to load | Authors released the dataset but not code or weights | Train our own BMnet-style model (D-005) | src/anthro/model.py |
+| 14 Nov 2026 | File names unknown before download | BodyM's file layout isn't documented | Exploration notebook discovers and prints the layout; code written against what it found | notebooks/01_explore_bodym.ipynb |
+| 14 Nov 2026 | Our build environment couldn't reach Amazon storage | Network allowlist | Notebook runs in Colab; tests use a fake BodyM with the same layout | tests/conftest.py |

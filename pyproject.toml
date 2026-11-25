@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anthro"
+version = "0.1.0"
+description = "Body measurements from front and side photos plus height — Ashesi University student research project"
+readme = "README.md"
+requires-python = ">=3.10"
+# Ranges, not exact pins: Colab ships its own torch build, and forcing a different one
+# wastes minutes per session. CI installs the CPU build of the same range.
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "pillow>=10.0",
+    "scikit-learn>=1.3",
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6"]
+
+[project.scripts]
+anthro = "anthro.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# The measurement catalogue and the output schema ship with the package (S7-0).
+[tool.setuptools.package-data]
+anthro = ["data/*.json"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+# S101: asserts are fine in tests. S311: random numbers here are for ML, not cryptography.
+ignore = ["S101", "S311"]
+
+[tool.ruff.lint.per-file-ignores]
+# Notebooks are step-by-step teaching material: imports beside their first use and short
+# one-line statements are fine there. Bug-catching rules (unused names, undefined names) still apply.
+"notebooks/*" = ["E402", "E501", "E701", "E702", "I001"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+# Coverage (D-021): industry practice is 70-80%; CI fails below 80%. `__main__.py` is a two-line
+# entry point that only calls cli.main, which the tests cover directly.
+[tool.coverage.run]
+source = ["anthro"]
+omit = ["*/anthro/__main__.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = false

@@ -1,15 +1,16 @@
-# POLICY — rules for Claude Code
+# Policy — rules for Claude Code
 
 These rules override convenience; when one blocks a task, Claude Code stops and asks rather than
 working around it. This is a student research project at Ashesi University.
 
 ## Process
 
-1. Spec first. No code for a step until its `specs/S#` file is marked approved by Ryan.
+1. Spec first. No code for a step until its `specs/<step>/spec.md` is marked approved by Ryan.
 2. One step or fix per branch and pull request. Never push to `main`; never merge without Ryan's "merge it".
-3. Every change includes tests, refusal cases included. Lint and tests pass before saying "done".
+3. Every change includes tests, refusal cases included. Lint and tests pass, and test coverage stays at or
+   above 80%, before saying "done".
 4. Unsure about scope, method, data or a trade-off? Ask Ryan, then record the answer in
-   `DISCUSSION.md`. Never guess.
+   `specs/discussions.md`. Never guess.
 5. Commit messages say what changed and why, in plain words (`type(scope): summary`).
 
 ## Data, licences and privacy
