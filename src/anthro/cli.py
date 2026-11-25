@@ -301,12 +301,14 @@ def _geometry_rough(a) -> None:
     ratio = ((formulas or {}).get("level_ratios") or {}).get("knee_from_floor",
                                                              geometry_rough.KNEE_FROM_FLOOR_TEXTBOOK)
     _, val_df = split_by_person(load_all(a.data)["train"], cfg.val_fraction, cfg.seed)
-    spread, share = geometry_rough.summarise_people(val_df, a.data, ck["geo_fit"], ratio)
+    spread, share, order = geometry_rough.summarise_people(val_df, a.data, ck["geo_fit"], ratio)
     print(f"== S5b rough outline estimates on {val_df.subject_id.nunique()} validation people "
           f"(knee height {ratio:.3f} of stature) ==")
     print(spread.to_string())
     print("\n% of people each code could be measured for, by sex and BMI band")
     print(share.to_string())
+    print("\nOrder against BodyM's measured girths (% of people; gap = rough value minus BodyM value)")
+    print(order.to_string(index=False))
     print("\nNo errors: these measurements have no photo-paired tape values anywhere yet (D-034).")
 
 

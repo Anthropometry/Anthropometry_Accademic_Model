@@ -80,6 +80,7 @@ def summarise_people(df, root, geo_fit: dict, knee_from_floor: float):
     from .preprocess import load_mask
     codes = ("underbust_girth", "high_hip_girth", "knee_girth")
     recs = []
+    truth = df.groupby(SUBJECT_COL)[["chest", "waist", "hip"]].first()       # BodyM's virtual-tape values
     for row in df.itertuples(index=False):
         d = Path(root) / row.split
         pid = getattr(row, PHOTO_COL)
@@ -98,7 +99,24 @@ def summarise_people(df, root, geo_fit: dict, knee_from_floor: float):
     groups = per.notna().groupby([people[SEX_COL].str.lower(), bmi_band(people)], observed=True)
     share = (groups.mean() * 100).round(1)
     share["people"] = groups.size()
-    return spread, share
+    # Order check against BodyM's own measured girths (not the photo model's): how often does each rough
+    # value sit where it should? BodyM's hip is at a fixed height, not the fullest point, so a high hip above
+    # it is not always wrong; the rates are evidence, not a score.
+    t = truth.loc[per.index]
+    ok_ub = per["underbust_girth"] < t["chest"]
+    ok_hh = (per["high_hip_girth"] > t["waist"]) & (per["high_hip_girth"] < t["hip"])
+    order = pd.DataFrame({
+        "rule": ["under-bust < BodyM chest", "BodyM waist < high hip < BodyM hip",
+                 "high hip above BodyM hip", "high hip below BodyM waist"],
+        "people_pct": [round(ok_ub[per["underbust_girth"].notna()].mean() * 100, 1),
+                       round(ok_hh[per["high_hip_girth"].notna()].mean() * 100, 1),
+                       round((per["high_hip_girth"] >= t["hip"]).mean() * 100, 1),
+                       round((per["high_hip_girth"] <= t["waist"]).mean() * 100, 1)],
+        "median_gap_cm": [round(float((per["underbust_girth"] - t["chest"]).median()), 1),
+                          None,
+                          round(float((per["high_hip_girth"] - t["hip"]).median()), 1),
+                          round(float((per["high_hip_girth"] - t["waist"]).median()), 1)]})
+    return spread, share, order
 
 
 def estimate(front: np.ndarray, side: np.ndarray, person: dict, geo_fit: dict,

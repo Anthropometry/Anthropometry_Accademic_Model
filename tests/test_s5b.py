@@ -95,9 +95,22 @@ def test_estimate_on_a_real_pipeline_pair(run):
     assert all((v is None) == bool(why) or why for v, why in est.values())
 
 
+def test_front_length_is_routed_to_ansur():
+    from anthro import suppliers as s
+    order = s.load_routing()["front_length"]
+    assert order.index("ansur") < order.index("geometry")
+
+
+def test_packaged_formulas_give_front_length_and_ansur_knee_height():
+    from importlib import resources
+    doc = json.loads(resources.files("anthro").joinpath("data/ansur_formulas.json").read_text())
+    assert "front_length" in doc["formulas"] and 0.2 < doc["level_ratios"]["knee_from_floor"] < 0.35
+
+
 def test_full_prediction_stays_valid_and_rough_rows_have_no_error(run):
     doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60)
     assert output.validate(doc) == []
+    assert doc["measurements"]["front_length"]["source"] == "ansur"
     rough = [m for m in doc["measurements"].values() if m["quality"] == "rough"]
     assert all(m["expected_error_cm"] is None for m in rough)
     assert doc["measurements"]["bust_point_distance"]["quality"] == "not_available"     # D-025
@@ -133,7 +146,7 @@ def test_cli_ansur_columns_and_geometry_rough(run, tmp_path, capsys):
     assert "kneeheightmidpatella" in capsys.readouterr().out
     main(["geometry-rough", "--data", str(run["data"]), "--ckpt", str(run["ckpt"])])
     out = capsys.readouterr().out
-    assert "measured_pct" in out and "No errors" in out
+    assert "measured_pct" in out and "No errors" in out and "Order against BodyM" in out
 
 
 def test_geometry_rough_refuses_a_non_hybrid_checkpoint(run, tmp_path):
@@ -151,7 +164,6 @@ def test_no_geometry_fit_means_no_rough_values(run):
     from importlib import resources
     doc = json.loads(resources.files("anthro").joinpath("data/ansur_formulas.json").read_text())
     person = {"height_cm": 170, "weight_kg": 70, "sex": "male"}
-    assert "level_ratios" not in doc                                 # the formula file from before S5b
     assert predict.rough_estimates(run["front"], run["side"], person, None, doc) == {}    # no geometry fit
 
 

@@ -393,7 +393,7 @@ def test_cli_read_export_prints_counts_only(tmp_path, capsys):
 def test_packaged_ansur_formulas_are_used_by_default(run):
     doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60)
     assert output.validate(doc) == []
-    assert sum(v["quality"] == "derived" for v in doc["measurements"].values()) == 9
+    assert sum(v["quality"] == "derived" for v in doc["measurements"].values()) == 10   # 9 + front length
 
 
 def test_packaged_black_fitted_inseam_is_flagged_and_warned(run):

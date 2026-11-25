@@ -2,6 +2,28 @@
 
 Only numbers from Ryan's real runs go here, each with its date, data fingerprint and commit.
 
+## S5b — Last four measurements (25 Nov 2026, commit 3aeda47, branch s5b-geometry-rough)
+
+**ANSUR columns that might match** (`anthro ansur-columns`): no under-bust, knee or high-hip girth exists in
+ANSUR II (`lowerthighcircumference` is above the knee). Front length: `waistfrontlengthsitting` (seated;
+D-033). Knee height from ANSUR: 0.277 of stature (median of `kneeheightmidpatella` / `stature`).
+
+**Front length from ANSUR** (held-out, 5 folds by person; chosen formula: extended, blurred):
+
+| Sex | MAE | % within 1.5 / 2 / 3 cm | Sex-average baseline % ±1.5 | Black participants % ±1.5 |
+| --- | --- | --- | --- | --- |
+| women | 1.49 cm | 58.1 / 70.6 / 89.0 | 47.2 | 57.2 |
+| men | 1.78 cm | 50.2 / 63.4 / 82.0 | 39.2 | 50.9 |
+
+**Rough outline estimates on 202 validation people** (no error: D-034). Measured for 100% of people in every
+sex and BMI band. Spread (median, 5th–95th percentile, both sexes pooled): under-bust 94.4 (79.0–120.7),
+high hip 96.9 (84.1–117.4), knee 38.5 (33.7–51.4) cm.
+
+**Two predictions (Test-B):** a woman got 21 of 24 rows (front length missing: a routing bug, since fixed); her
+high hip (98.7) came out above her hip (87.4) and was flagged by the order check. A man got 17 of 18 (front
+length, same bug) and a retake warning (outline and photo model 15.6 cm apart on hip); his knee girth read
+49.4 cm, near the top of the validation spread.
+
 ## S5a — ANSUR II formulas and chest/waist mix test (25 Nov 2026, commit 7dc82e0, ANSUR fingerprint 8cf328fefeb32acd)
 
 ANSUR II: 1,986 women, 4,082 men. Held out 5 folds by person. Extended formulas' photo-model inputs blurred to
