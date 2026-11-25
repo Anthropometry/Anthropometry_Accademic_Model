@@ -97,10 +97,38 @@ which already matches the app's definition, while BodyM's hip is at a fixed heig
 
 Also kept for later (not built now): a large photo-model vs ANSUR disagreement as a second retake signal.
 
+## Follow-up tests (Ryan, 25 Nov 2026: "add both and build them")
+
+After the first run (docs/RESULTS.md, S5a): leg lengths were weak, and inseam much worse for Black participants.
+
+### F1. Photo model's leg length as an input for the leg codes
+
+- **Why:** inseam, outseam, waist to knee and shoulder to knee had no leg information; the photo model
+  predicts `leg-length` from the silhouette.
+- **Definition check first:** BodyM's leg-length definition is unpublished. Compare the ratio leg-length /
+  height on BodyM's training people with ANSUR's `crotchheight` / `stature`. Treated as the same measurement
+  only if the medians differ by at most 0.02 (about 3.4 cm at 170 cm); otherwise F1 stops and says so.
+- **If it passes:** a third candidate formula per leg code ("extended + leg": extended inputs plus
+  `leg-length`, standing in for `crotchheight`, blurred to its Test-B error). Kept only if its held-out error
+  beats the current choice; otherwise the current formula stays.
+
+### F2. Formulas fitted on ANSUR's Black participants only (inseam, hip)
+
+- Same kind of formula as chosen, fitted on Black participants only (per sex), 5 folds by person.
+- Compared, on Black participants, with the general formula's held-out errors for that same group.
+- Kept as an alternative only if better on both average error and % within ±1.5 cm. It is **not** switched
+  on automatically: the app does not record race, so using it means using it for everyone (the app is for
+  Ghana). Ryan decides after seeing the numbers (`prefer_black_fitted` in the formula file, default off).
+
+### Tolerance view (for the ±1.5 / 2 / 3 cm conversation)
+
+`anthro evaluate` and `anthro ansur-fit` also print % within 2 and 3 cm. Exploration only: the target stays
+±1.5 cm (D-002).
+
 ## Commands
 
 ```bash
-anthro ansur-fit --ansur DRIVE/ansur2 --report runs/r4/eval_report.json --out ansur_formulas.json
+anthro ansur-fit --ansur DRIVE/ansur2 --report runs/r4/eval_report.json --out ansur_formulas.json [--bodym bodym]   # --bodym: F1 leg check
 anthro ansur-mix --data bodym --ckpt runs/r4/best.pt --formulas ansur_formulas.json   # adds the mix, if it wins
 anthro predict-silhouettes ... --ansur ansur_formulas.json
 ```

@@ -44,6 +44,7 @@ from .evaluate import (
     retake_report,
     retake_threshold,
     summarise,
+    tolerance_view,
 )
 
 
@@ -159,9 +160,13 @@ def _evaluate(a) -> None:
         else:
             print("\nconsistency: average spread (cm) of one person's predictions across photos")
             print(spread.to_string())
+        tv = tolerance_view(err)
+        print("\n% of people within 1.5 / 2 / 3 cm (exploration only; the target stays ±1.5 cm)")
+        print(tv.to_string())
         print("\n% within tolerance by sex and BMI band")
         print(by_group(df, err).to_string())
-        entry = {"table": table.reset_index().to_dict(orient="records")}
+        entry = {"table": table.reset_index().to_dict(orient="records"),
+                 "tolerance_view": tv.reset_index().to_dict(orient="records")}
         if threshold is not None:
             dis = disagreement(df, gtab, pred).loc[err.index]
             flagged = dis > threshold
@@ -198,9 +203,19 @@ def _ansur_fit(a) -> None:
     df = ansur.load(a.ansur)
     report = json.loads(Path(a.report).read_text())
     errors, basis = suppliers.errors_from_report(report, "testB")
-    noise = {n: errors[n] for n in ansur.PHOTO_INPUTS if n in errors}
-    doc, scores = ansur.fit(df, noise, catalog.version(), ansur.fingerprint(a.ansur), basis)
+    noise = {n: errors[n] for n in ansur.ALL_PHOTO if n in errors}
     print(f"ANSUR II: {int((df.sex == 'female').sum())} women, {int((df.sex == 'male').sum())} men")
+    leg = None
+    if a.bodym:
+        from .data import load_split
+        leg = ansur.leg_check(df, load_split(a.bodym, "train"))
+        print(f"F1 leg check: leg-length/height median BodyM {leg['bodym_median_ratio']:.3f}, ANSUR crotch "
+              f"height/stature {leg['ansur_median_ratio']:.3f}, difference {leg['difference']:.3f} "
+              f"(limit {leg['tolerance']}) -> "
+              f"{'PASSED: leg formulas tried' if leg['passed'] else 'FAILED: not used'}")
+    doc, scores = ansur.fit(df, noise, catalog.version(), ansur.fingerprint(a.ansur), basis,
+                            leg_ok=bool(leg and leg["passed"]))
+    doc["leg_check"] = leg
     blur = ", ".join(f"{k} {v:.2f}" for k, v in noise.items())
     print(f"photo-model blur (Test-B per-person MAE, cm): {blur}")
     print("\n== held-out error per formula (5 folds by person); 'chosen' = used in the output ==")
@@ -208,6 +223,10 @@ def _ansur_fit(a) -> None:
         print(scores.to_string(index=False))
         print("\n== chosen formula by group: BMI bands, and Black participants separately (D-030) ==")
         print(ansur.subgroup_table(df, doc, noise).to_string(index=False))
+        doc["black_fitted"], bt = ansur.black_fitted(df, doc, noise)
+        print("\n== F2: inseam and hip fitted on Black participants only, judged on Black participants ==")
+        print(bt.to_string(index=False))
+        print("(kept = better on both MAE and % within ±1.5; not switched on until Ryan decides)")
         print("\n== cost of a stated height and weight (basic formula, ANSUR's self-reported values) ==")
         print(ansur.self_report_check(df).to_string(index=False))
     Path(a.out).write_text(json.dumps(doc, indent=2) + "\n")
@@ -362,6 +381,7 @@ def main(argv: list[str] | None = None) -> None:
     af.add_argument("--ansur", required=True, help="folder with the two ANSUR II public CSV files (on Drive)")
     af.add_argument("--report", required=True, help="evaluation report with a testB section (blur size)")
     af.add_argument("--out", required=True)
+    af.add_argument("--bodym", default=None, help="BodyM folder: runs the F1 leg-length check")
     af.set_defaults(fn=_ansur_fit)
 
     am = sub.add_parser("ansur-mix", help="S5a: does mixing ANSUR into chest/waist beat the photo model?")

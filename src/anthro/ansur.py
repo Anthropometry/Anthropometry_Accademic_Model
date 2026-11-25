@@ -65,6 +65,14 @@ PHOTO_INPUTS = {
     "thigh": "thighcircumference", "calf": "calfcircumference", "wrist": "wristcircumference",
     "hip": "buttockcircumference",
 }
+# F1: the photo model's leg length stands in for ANSUR's crotch height, for the leg codes only, and only
+# after the definition check (leg_check) passes.
+LEG_INPUT = {"leg-length": "crotchheight"}
+LEG_CODES = ("inseam", "outseam", "waist_to_knee", "shoulder_to_knee")
+LEG_RATIO_TOLERANCE = 0.02           # medians of leg/height may differ by this much (~3.4 cm at 170 cm)
+# F2: codes where Black participants did much worse (first run, 25 Nov 2026).
+BLACK_FIT_CODES = ("inseam", "hip_girth")
+ALL_PHOTO = {**PHOTO_INPUTS, **LEG_INPUT}
 # The big girths for the mix test (spec: "Mix test"): BodyM name -> ANSUR column.
 MIX_GIRTHS = {"chest": "chestcircumference", "waist": "waistcircumference"}
 BASIC = ("height_cm", "weight_kg", "bmi")
@@ -79,7 +87,7 @@ class AnsurError(ValueError):
 
 def needed_columns() -> set[str]:
     cols = {c.lstrip("-") for parts, _ in TARGETS.values() for c in parts}
-    return cols | set(PHOTO_INPUTS.values()) | set(OTHER)
+    return cols | set(ALL_PHOTO.values()) | set(OTHER)
 
 
 def fingerprint(folder: str | Path) -> str:
@@ -163,7 +171,7 @@ def _X(df: pd.DataFrame, inputs: list[str], noise: dict[str, float] | None, rng)
         if name in BASIC:
             cols.append(df[name].to_numpy(float))
         else:
-            v = df[PHOTO_INPUTS[name]].to_numpy(float)
+            v = df[ALL_PHOTO[name]].to_numpy(float)
             if noise is not None:
                 v = v + rng.normal(0.0, sigma_from_mae(noise.get(name, 0.0)), len(v))
             cols.append(v)
@@ -171,9 +179,12 @@ def _X(df: pd.DataFrame, inputs: list[str], noise: dict[str, float] | None, rng)
 
 
 def _scores(err: np.ndarray, tol: float = TOLERANCE_CM) -> dict:
+    """pct_within is the target (±1.5 cm, D-002); the 2 and 3 cm columns are for exploration only."""
     err = np.abs(err)
     return {"mae_cm": round(float(err.mean()), 2), "p90_cm": round(float(np.quantile(err, 0.9)), 2),
-            "pct_within": round(float((err <= tol).mean() * 100), 1), "people": int(len(err))}
+            "pct_within": round(float((err <= tol).mean() * 100), 1),
+            "pct_within_2": round(float((err <= 2.0).mean() * 100), 1),
+            "pct_within_3": round(float((err <= 3.0).mean() * 100), 1), "people": int(len(err))}
 
 
 def cv_errors(df: pd.DataFrame, target: str, inputs: list[str], noise=None, seed: int = 0) -> np.ndarray:
@@ -195,9 +206,20 @@ def extended_inputs(code: str) -> list[str]:
     return [*BASIC, *[n for n, col in PHOTO_INPUTS.items() if col != own]]
 
 
+def leg_check(df: pd.DataFrame, bodym_train: pd.DataFrame) -> dict:
+    """F1: is BodyM's leg-length the same measurement as ANSUR's crotch height? Compare leg/height ratios."""
+    people = bodym_train.drop_duplicates("subject_id")
+    b = float((people["leg-length"] / people["height"]).median())
+    a = float((df["crotchheight"] / df["stature"]).median())
+    return {"bodym_median_ratio": round(b, 4), "ansur_median_ratio": round(a, 4),
+            "difference": round(abs(a - b), 4), "tolerance": LEG_RATIO_TOLERANCE,
+            "passed": bool(abs(a - b) <= LEG_RATIO_TOLERANCE)}
+
+
 def fit(df: pd.DataFrame, noise: dict[str, float], catalogue_version: str, data_fp: str,
-        noise_basis: str) -> tuple[dict, pd.DataFrame]:
-    """Formulas (plain numbers) and a score table for printing."""
+        noise_basis: str, leg_ok: bool = False) -> tuple[dict, pd.DataFrame]:
+    """Formulas (plain numbers) and a score table for printing. With leg_ok (F1 check passed), leg codes
+    also try "extended + leg"."""
     formulas, rows = {}, []
     for code in TARGETS:
         formulas[code] = {}
@@ -210,13 +232,18 @@ def fit(df: pd.DataFrame, noise: dict[str, float], catalogue_version: str, data_
             base_err = np.zeros(len(d))
             for k in np.unique(fo):
                 base_err[fo == k] = y[fo != k].mean() - y[fo == k]
-            basic_err = cv_errors(d, code, list(BASIC))
             ext_in = extended_inputs(code)
-            ext_err = cv_errors(d, code, ext_in, noise)
+            # Candidates in order of simplicity; a later one must be strictly better to win.
+            cands = [("basic", list(BASIC), cv_errors(d, code, list(BASIC))),
+                     ("extended", ext_in, cv_errors(d, code, ext_in, noise))]
+            if leg_ok and code in LEG_CODES:
+                leg_in = [*ext_in, *LEG_INPUT]
+                cands.append(("extended + leg", leg_in, cv_errors(d, code, leg_in, noise)))
             ext_clean = cv_errors(d, code, ext_in, None)
-            sb, se = _scores(basic_err), _scores(ext_err)
-            kind, inputs, err = (("extended", ext_in, ext_err) if se["mae_cm"] < sb["mae_cm"]
-                                 else ("basic", list(BASIC), basic_err))
+            kind, inputs, err = cands[0]
+            for c in cands[1:]:
+                if _scores(c[2])["mae_cm"] < _scores(err)["mae_cm"]:
+                    kind, inputs, err = c
             m = LinearRegression().fit(_X(d, inputs, None, None), y)
             formulas[code][sex] = {
                 "kind": kind, "inputs": inputs, "intercept": float(m.intercept_),
@@ -225,13 +252,16 @@ def fit(df: pd.DataFrame, noise: dict[str, float], catalogue_version: str, data_
                 "range_cm": [float(np.quantile(y, 0.01)), float(np.quantile(y, 0.99))],
                 "definition_match": TARGETS[code][1],
             }
-            for name, e in (("sex average", base_err), ("basic", basic_err), ("extended, blurred", ext_err),
-                            ("extended, tape inputs", ext_clean)):
-                rows.append({"code": code, "sex": sex, "formula": name, **_scores(e),
-                             "chosen": name.startswith(kind) and name != "extended, tape inputs"})
+            labels = {"basic": "basic", "extended": "extended, blurred",
+                      "extended + leg": "extended + leg, blurred"}
+            shown = [("sex average", base_err, False)] + [(labels[k], e, k == kind) for k, _, e in cands]
+            shown.append(("extended, tape inputs", ext_clean, False))
+            for name, e, chosen in shown:
+                rows.append({"code": code, "sex": sex, "formula": name, **_scores(e), "chosen": chosen})
     doc = {"format": FORMAT, "catalogue": catalogue_version, "ansur_fingerprint": data_fp,
            "noise_basis": noise_basis, "noise_mae_cm": {k: float(v) for k, v in noise.items()},
-           "girth_basic": girth_basic(df), "formulas": formulas, "mix": {}}
+           "girth_basic": girth_basic(df), "formulas": formulas, "mix": {},
+           "black_fitted": {}, "prefer_black_fitted": False}
     return doc, pd.DataFrame(rows)
 
 
@@ -247,6 +277,33 @@ def girth_basic(df: pd.DataFrame) -> dict:
     return out
 
 
+def black_fitted(df: pd.DataFrame, doc: dict, noise: dict[str, float]) -> tuple[dict, pd.DataFrame]:
+    """F2: inseam and hip refitted on Black participants only, judged on Black participants (5 folds).
+
+    Kept only if better than the general formula for that group on both average error and % within ±1.5 cm.
+    Not switched on here: `prefer_black_fitted` stays False until Ryan decides (the app records no race)."""
+    out, rows = {}, []
+    for code in BLACK_FIT_CODES:
+        out[code] = {}
+        for sex, f in doc["formulas"].get(code, {}).items():
+            d = df[df["sex"] == sex].reset_index(drop=True)
+            nz = noise if f["kind"] != "basic" else None
+            sel = (d["dodrace"] == BLACK).to_numpy()
+            general = cv_errors(d, code, f["inputs"], nz)[sel]      # general formula, Black people's errors
+            b = d[sel].reset_index(drop=True)
+            own = cv_errors(b, code, f["inputs"], nz)                   # fitted and judged on Black people
+            sg, so = _scores(general), _scores(own)
+            keep = so["mae_cm"] < sg["mae_cm"] and so["pct_within"] > sg["pct_within"]
+            m = LinearRegression().fit(_X(b, f["inputs"], None, None), b[code].to_numpy(float))
+            out[code][sex] = {**f, "intercept": float(m.intercept_), "coef": [float(c) for c in m.coef_],
+                              "mae_cm": so["mae_cm"], "pct_within": so["pct_within"], "kept": bool(keep),
+                              "general_on_black": sg, "black_fitted_on_black": so}
+            rows += [{"code": code, "sex": sex, "formula": "general, on Black participants", **sg},
+                     {"code": code, "sex": sex, "formula": "Black-fitted, on Black participants", **so,
+                      "kept": keep}]
+    return out, pd.DataFrame(rows)
+
+
 def subgroup_table(df: pd.DataFrame, doc: dict, noise: dict[str, float]) -> pd.DataFrame:
     """Chosen formula's held-out error by BMI band and for Black participants vs everyone else (D-030)."""
     rows = []
@@ -255,7 +312,7 @@ def subgroup_table(df: pd.DataFrame, doc: dict, noise: dict[str, float]) -> pd.D
         for sex, f in by_sex.items():
             mask = (df["sex"] == sex).to_numpy()
             d = df[mask].reset_index(drop=True)
-            err = np.abs(cv_errors(d, code, f["inputs"], noise if f["kind"] == "extended" else None))
+            err = np.abs(cv_errors(d, code, f["inputs"], noise if f["kind"] != "basic" else None))
             groups = {"all": np.ones(len(d), bool),
                       "Black participants": (d["dodrace"] == BLACK).to_numpy(),
                       "all other participants": (d["dodrace"] != BLACK).to_numpy()}

@@ -107,6 +107,9 @@ class Ansur:
             f = by_sex.get(ctx.person["sex"])
             if f is None:
                 continue
+            alt = self.doc.get("black_fitted", {}).get(code, {}).get(ctx.person["sex"])
+            if self.doc.get("prefer_black_fitted") and alt and alt.get("kept"):
+                f = alt                      # F2, only once Ryan switches it on
             if any(n not in ansur.BASIC and n not in ctx.bodym_cm for n in f["inputs"]):
                 continue                     # an extended formula needs photo-model values we don't have
             value = ansur.apply(f, ctx.person, ctx.bodym_cm)

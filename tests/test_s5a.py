@@ -266,3 +266,74 @@ def test_kept_mix_fills_waist_with_its_test_b_error(formulas):
     est = suppliers.Mix(doc).estimate(ctx)
     assert set(est) == {"bust_girth", "waist_girth"} and est["waist_girth"].expected_error_cm == 1.9
     assert est["waist_girth"].source == "mix"
+
+
+# ---------------------------------------------------------------- F1, F2, tolerance view
+
+def _bodym_people(ratio, n=50):
+    rng = np.random.default_rng(1)
+    h = rng.normal(170, 9, n)
+    return pd.DataFrame({"subject_id": [f"p{i}" for i in range(n)], "height": h,
+                         "leg-length": h * ratio + rng.normal(0, 1, n)})
+
+
+def test_leg_check_passes_only_when_the_ratios_match(table):
+    ansur_ratio = float((table["crotchheight"] / table["stature"]).median())
+    assert ansur.leg_check(table, _bodym_people(ansur_ratio))["passed"]
+    failed = ansur.leg_check(table, _bodym_people(ansur_ratio + 0.05))
+    assert not failed["passed"] and failed["difference"] > ansur.LEG_RATIO_TOLERANCE
+
+
+def test_leg_formulas_are_tried_only_for_leg_codes_and_win_when_informative(table):
+    noise = {**NOISE, "leg-length": 0.01}            # an almost exact leg length must help the leg codes
+    doc, scores = ansur.fit(table, noise, catalog.version(), "fp", "test", leg_ok=True)
+    tried = set(scores.loc[scores.formula == "extended + leg, blurred", "code"])
+    assert tried == set(ansur.LEG_CODES)
+    assert doc["formulas"]["inseam"]["male"]["kind"] == "extended + leg"
+    assert "leg-length" in doc["formulas"]["inseam"]["male"]["inputs"]
+    _, without = ansur.fit(table, NOISE, catalog.version(), "fp", "test", leg_ok=False)
+    assert "extended + leg, blurred" not in set(without["formula"])
+
+
+def test_leg_formula_uses_the_photo_models_leg_length(table):
+    doc, _ = ansur.fit(table, {**NOISE, "leg-length": 0.01}, catalog.version(), "fp", "test", leg_ok=True)
+    person = {"sex": "male", "height_cm": 176.0, "weight_kg": 85.0, "height_kind": "measured"}
+    photo = {"chest": 100, "waist": 88, "shoulder-breadth": 40, "thigh": 58, "calf": 38, "wrist": 17,
+             "hip": 100, "leg-length": 82.0}
+    short = suppliers.Ansur(doc).estimate(suppliers.Context(person, photo))["inseam"].value_cm
+    long_ = suppliers.Ansur(doc).estimate(suppliers.Context(person, {**photo, "leg-length": 90.0}))
+    assert long_["inseam"].value_cm > short + 5
+
+
+def test_black_fitted_alternative_is_stored_but_off_until_ryan_decides(table, formulas):
+    doc = json.loads(json.dumps(formulas[0]))
+    alt, t = ansur.black_fitted(table, doc, NOISE)
+    assert set(alt) == set(ansur.BLACK_FIT_CODES) and set(alt["inseam"]) == {"female", "male"}
+    assert {"general, on Black participants", "Black-fitted, on Black participants"} <= set(t["formula"])
+    doc["black_fitted"] = alt
+    person = {"sex": "male", "height_cm": 176.0, "weight_kg": 85.0}
+    photo = {"chest": 100, "waist": 88, "shoulder-breadth": 40, "thigh": 58, "calf": 38, "wrist": 17,
+             "hip": 100}
+    general = suppliers.Ansur(doc).estimate(suppliers.Context(person, photo))["inseam"].value_cm
+    for f in alt["inseam"].values():
+        f.update(kept=True, intercept=f["intercept"] + 10)          # make the switch visible
+    assert suppliers.Ansur(doc).estimate(suppliers.Context(person, photo))["inseam"].value_cm == general
+    doc["prefer_black_fitted"] = True
+    assert suppliers.Ansur(doc).estimate(suppliers.Context(person, photo))["inseam"].value_cm > general + 5
+
+
+def test_cli_fit_runs_the_leg_check_and_f2(run, fake_ansur, tmp_path, capsys):
+    out = tmp_path / "f.json"
+    main(["ansur-fit", "--ansur", str(fake_ansur), "--report", str(run["ckpt"].parent / "eval_report.json"),
+          "--out", str(out), "--bodym", str(run["data"])])
+    text = capsys.readouterr().out
+    assert "F1 leg check" in text and "F2" in text and "pct_within_3" in text
+    doc = ansur.load_formulas(out)
+    assert doc["leg_check"] is not None and doc["prefer_black_fitted"] is False
+
+
+def test_evaluate_reports_the_tolerance_view(run):
+    report = json.loads((run["ckpt"].parent / "eval_report.json").read_text())
+    rows = report["testB"]["tolerance_view"]
+    assert {"within_1.5cm_pct", "within_2cm_pct", "within_3cm_pct"} <= set(rows[0])
+    assert all(r["within_1.5cm_pct"] <= r["within_2cm_pct"] <= r["within_3cm_pct"] for r in rows)
