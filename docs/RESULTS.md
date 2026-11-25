@@ -19,6 +19,11 @@ D-033). Knee height from ANSUR: 0.277 of stature (median of `kneeheightmidpatell
 sex and BMI band. Spread (median, 5th–95th percentile, both sexes pooled): under-bust 94.4 (79.0–120.7),
 high hip 96.9 (84.1–117.4), knee 38.5 (33.7–51.4) cm.
 
+**Order against BodyM's measured girths, 202 validation people** (commit 3536241): under-bust below BodyM
+chest for 85.1% (median 5.6 cm below); high hip between BodyM waist and hip for 81.7%; above BodyM hip for 11.9%;
+below BodyM waist for 6.4%. BodyM's hip is at a fixed height, and some bodies (a belly larger than the hips)
+legitimately break the waist < high hip < hip order, so these rates are evidence, not errors.
+
 **Two predictions (Test-B):** a woman got 21 of 24 rows (front length missing: a routing bug, since fixed); her
 high hip (98.7) came out above her hip (87.4) and was flagged by the order check. A man got 17 of 18 (front
 length, same bug) and a retake warning (outline and photo model 15.6 cm apart on hip); his knee girth read
