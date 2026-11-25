@@ -4,6 +4,7 @@ Problems met while building, what caused them and what fixed them. Newest first.
 
 | Date | Challenge | Cause | Fix | Where |
 | --- | --- | --- | --- | --- |
+| 25 Nov 2026 | Notebook 04 cell 5: `syntax error near unexpected token '('` | Colab fills `{...}` in a `!` line only if every one works; a function call and a number format inside braces failed, so the raw text reached the shell | Values worked out in Python first; the `!` line uses plain names only | notebooks/04_s7_predict.ipynb |
 | 25 Nov 2026 | Notebook 04 cell 4: `No module named 'anthro'` on Colab | `pip install -e` in a running session is only importable after a restart; earlier notebooks only ran `!anthro` commands | Cell 2 adds the code folder to Python's path | notebooks/04_s7_predict.ipynb |
 | 25 Nov 2026 | CI secret scan failed on every pull request since 19 Nov (tests themselves passed) | The gitleaks GitHub Action now requires a paid licence for organisation accounts | Run the free gitleaks program directly, pinned to v8.21.2: same tool, same check | .github/workflows/ci.yml |
 | 25 Nov 2026 | Changing one person's record in a test changed an already-built result | The result stored a reference to the caller's person record, not a copy | The result keeps its own copy; caught by the output tests | src/anthro/output.py |
