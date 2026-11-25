@@ -41,6 +41,45 @@ leg-to-height proportions. This matters most for Ghana.
 Girths and upper-body lengths: +0.0–0.5 cm average error. Leg lengths: inseam +0.3/+0.5, outseam +0.5/+0.7,
 waist to knee +0.2, shoulder to knee +0.3 cm (women / men).
 
+### Follow-ups F1, F2 and the tolerance view (25 Nov 2026, commit 4f37681, branch s5a-ansur)
+
+**F1, leg-length check: failed.** Median leg-length/height on BodyM training people 0.455; ANSUR crotch
+height/stature 0.481; difference 0.026 > limit 0.02 (about 4.4 cm at 170 cm). BodyM's leg length is a
+different measurement; not used.
+
+**F2, formulas fitted on ANSUR's Black participants, judged on them (5 folds by person):**
+
+| Code | Sex | General formula: MAE, % ±1.5 / 2 / 3 cm | Black-fitted: MAE, % ±1.5 / 2 / 3 cm |
+| --- | --- | --- | --- |
+| inseam | women (656) | 2.34 cm; 34.1 / 48.3 / 66.9 | **1.63 cm; 52.6 / 68.9 / 86.9** |
+| inseam | men (642) | 2.83 cm; 30.5 / 39.4 / 58.1 | **1.83 cm; 50.2 / 62.5 / 81.9** |
+| hip_girth | women | 2.13 cm; 41.9 / 54.0 / 73.3 | 2.07 cm; 43.1 / 58.4 / 76.5 |
+| hip_girth | men | 2.11 cm; 41.4 / 53.9 / 75.1 | 2.00 cm; 43.8 / 57.2 / 76.5 |
+
+Switched on for everyone by Ryan (D-032).
+
+**Photo model r4 on Test-B (400 people): % within 1.5 / 2 / 3 cm (exploration; target stays ±1.5 cm).**
+
+| Measurement | ±1.5 | ±2 | ±3 |
+| --- | ---: | ---: | ---: |
+| chest | 40.2 | 53.0 | 69.8 |
+| waist | 40.0 | 54.2 | 70.8 |
+| hip (BodyM) | 50.2 | 62.3 | 77.0 |
+| leg-length | 66.5 | 81.5 | 90.2 |
+| thigh | 69.0 | 81.8 | 92.2 |
+| height | 71.5 | 81.8 | 89.5 |
+| shoulder-to-crotch | 74.0 | 84.8 | 95.2 |
+| calf | 75.2 | 87.0 | 97.2 |
+| bicep | 78.2 | 90.5 | 97.2 |
+| arm-length | 86.5 | 94.2 | 97.8 |
+| ankle | 89.2 | 94.0 | 98.5 |
+| forearm | 90.5 | 96.2 | 99.8 |
+| shoulder-breadth | 93.0 | 98.2 | 99.8 |
+| wrist | 97.0 | 98.8 | 99.8 |
+
+Retake warning on Test-B: threshold 7.71 cm (set on validation to fire for 10%) fired for **33%** of people;
+flagged people: chest 36.8%, waist 33.8%, hip 44.4% within ±1.5 cm vs 41.9 / 43.1 / 53.2% not flagged.
+
 ### Mix test, 202 BodyM validation people (5 folds by person)
 
 | Girth | Photo model alone | Photo model + ANSUR | Decision |

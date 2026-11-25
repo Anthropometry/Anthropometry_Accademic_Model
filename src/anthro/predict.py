@@ -186,6 +186,9 @@ def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, h
     if formulas is not None:
         chain += [suppliers.Ansur(formulas), suppliers.Mix(formulas)]
     estimates = suppliers.route(ctx, chain, suppliers.load_routing(routing_path))
+    if any("fitted_on_ansur_black_participants" in e.flags for e in estimates.values()):
+        warnings.append("inseam and hip use formulas fitted on ANSUR's Black participants (closer to "
+                        "Ghanaian users; D-032); replaced once Ghanaian tape data exists")
     model_version = (f"{Path(ckpt).parent.name} (anthro {ck.get('package_version')}, "
                      f"data {ck.get('data_fingerprint')})")
     return output.build(person, estimates, reasons, [*warnings, *FIXED_WARNINGS], model_version)
