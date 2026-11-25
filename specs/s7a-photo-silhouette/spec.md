@@ -77,12 +77,15 @@ version. `--save-silhouettes DIR` writes the two silhouettes for checking (to Dr
 
 ## Acceptance criteria (testable)
 
-- [ ] A fake photo with one person gives a clean silhouette of the right size and direction.
-- [ ] Each refusal case above refuses, with its reason.
-- [ ] `predict-photos` output validates as `anthro-output/1` and equals `predict-silhouettes` on the same masks.
-- [ ] Both candidate tools run behind one interface; the comparison command prints the four scores per tool.
-- [ ] No photo or silhouette is written anywhere except where `--save-silhouettes` points.
-- [ ] Tests use a fake segmenter (no download in CI); coverage stays ≥ 80%.
+Built 25 Nov 2026 (tests/test_s7a.py, synthetic photos and a fake segmenter). Notebook 07.
+
+
+- [x] A fake photo with one person gives a clean silhouette of the right size and direction.
+- [x] Each refusal case above refuses, with its reason.
+- [x] `predict-photos` output validates as `anthro-output/1` and equals `predict-silhouettes` on the same masks.
+- [x] Both candidate tools run behind one interface; the comparison command prints the four scores per tool.
+- [x] No photo or silhouette is written anywhere except where `--save-silhouettes` points.
+- [x] Tests use a fake segmenter (no download in CI); coverage stays ≥ 80%.
 - [ ] Ryan's Colab run with his test photos picks the tool; the decision is logged.
 
 ## How it is scored

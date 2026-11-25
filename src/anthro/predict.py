@@ -243,6 +243,32 @@ def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, h
     return output.build(person, estimates, reasons, [*warnings, *FIXED_WARNINGS], model_version)
 
 
+def predict_photos(front_photo, side_photo, height_cm, sex, ckpt, seg, bodym_side: str | None,
+                   save_dir=None, front_tilt=None, side_tilt=None, **kw) -> dict:
+    """S7a: two phone photos -> BodyM-like silhouettes -> the same result as `predict` (plus `inputs`).
+
+    Silhouettes go to `save_dir` when given (for checking; Drive, never the repository), otherwise to a
+    temporary folder that is deleted afterwards."""
+    import tempfile
+
+    from PIL import Image
+
+    from . import photo
+    sil_f = photo.silhouette(photo.load_photo(front_photo), seg, "front", tilt=front_tilt)
+    sil_s = photo.silhouette(photo.load_photo(side_photo), seg, "side", bodym_side, tilt=side_tilt)
+    with tempfile.TemporaryDirectory() as tmp:
+        d = Path(save_dir) if save_dir else Path(tmp)
+        d.mkdir(parents=True, exist_ok=True)
+        fp, sp = d / "front_silhouette.png", d / "side_silhouette.png"
+        Image.fromarray(sil_f.mask).save(fp)
+        Image.fromarray(sil_s.mask).save(sp)
+        doc = predict(fp, sp, height_cm, sex, ckpt, **kw)
+    doc["inputs"] = {"kind": "photos", "segmenter": seg.name, "segmenter_version": seg.version(),
+                     "side_facing": sil_s.facing, "side_mirrored": sil_s.mirrored}
+    doc["warnings"] += sil_f.notes + sil_s.notes
+    return doc
+
+
 def to_text(doc: dict) -> str:
     """The result as a readable table, for the notebook and the class demo."""
     p = doc["person"]

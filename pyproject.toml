@@ -22,6 +22,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6"]
+# S7a (D-043): segmentation tool B. Tool A uses torchvision, already a dependency.
+photos = ["rembg>=2.0.50", "onnxruntime>=1.16"]
 
 [project.scripts]
 anthro = "anthro.cli:main"

@@ -35,6 +35,16 @@ bodym/<train|testA|testB>/
 Register at smpl-x.is.tue.mpg.de and download the model files yourself (non-commercial research
 licence). Keep them on your own Drive; they are blocked by `.gitignore`.
 
+## Segmentation models (S7a, D-043)
+
+| Model | Used by | Licence | Note |
+| --- | --- | --- | --- |
+| DeepLabV3-ResNet101 (torchvision, COCO person class) | tool A | torchvision code BSD-3-Clause; weights trained on COCO | downloaded at run time, never committed |
+| U²-Net human segmentation (via rembg) | tool B | rembg MIT; U²-Net Apache-2.0 | downloaded at run time, never committed |
+
+Test photos (Ryan's pilot) stay on Drive; never committed, never printed, never saved by the code unless
+`--save-silhouettes` points somewhere. Treated as pilot material, not research data, until the IRB answer.
+
 ## Ghanaian data (step 6)
 
 Collected by AnthropometryDC after ethics approval. Reaches this project only as a de-identified

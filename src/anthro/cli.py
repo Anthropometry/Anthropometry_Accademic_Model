@@ -15,6 +15,9 @@
     anthro ansur-mix --data bodym --ckpt runs/r4/best.pt --formulas ansur_formulas.json             (S5a)
     anthro ansur-columns --ansur DRIVE/ansur2                                                        (S5b)
     anthro geometry-rough --data bodym --ckpt runs/r4/best.pt                                        (S5b)
+    anthro side-direction --data bodym                                                               (S7a)
+    anthro predict-photos --front F.jpg --side S.jpg --height H --sex female --ckpt C --tool rembg   (S7a)
+    anthro compare-segmenters --pairs pairs.csv --ckpt C --out compare.json                         (S7a)
 
 Why a CLI rather than logic in notebooks: notebooks are hard to review in a pull request and
 easy to run out of order. Notebooks here only call these commands, so what the supervisor
@@ -312,6 +315,61 @@ def _geometry_rough(a) -> None:
     print("\nNo errors: these measurements have no photo-paired tape values anywhere yet (D-034).")
 
 
+def _side_direction(a) -> None:
+    from . import photo
+    side = photo.bodym_facing(a.data)
+    print(f"BodyM side silhouettes face: {side or 'unknown'} (feet direction, majority of training masks)")
+
+
+def _predict_photos(a) -> None:
+    from . import photo, predict, segment
+    tilt = lambda p, r: None if p is None else (p, r)  # noqa: E731
+    try:
+        seg = segment.get(a.tool)
+        side = a.bodym_side or (photo.bodym_facing(a.data) if a.data else None)
+        doc = predict.predict_photos(a.front, a.side, a.height, a.sex, a.ckpt, seg, side,
+                                     save_dir=a.save_silhouettes,
+                                     front_tilt=tilt(a.front_pitch, a.front_roll),
+                                     side_tilt=tilt(a.side_pitch, a.side_roll), weight_kg=a.weight,
+                                     age_range=a.age_range, height_kind=a.height_kind, data_root=a.data,
+                                     weight_kind=a.weight_kind)
+    except (photo.PhotoError, predict.PredictError, ValueError, ImportError) as e:
+        raise SystemExit(f"refused: {e}") from e
+    print(predict.to_text(doc))
+    inp = doc["inputs"]
+    print(f"segmentation: {inp['segmenter_version']}; side photo facing {inp['side_facing']}"
+          f"{' (mirrored)' if inp['side_mirrored'] else ''}")
+    if a.out:
+        Path(a.out).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+        print(f"saved {a.out}")
+
+
+def _compare_segmenters(a) -> None:
+    from . import photo, segment, segment_compare
+    pairs = segment_compare.load_pairs(a.pairs)
+    side = a.bodym_side or (photo.bodym_facing(a.data) if a.data else None)
+    all_scores = {}
+    for name in a.tools:
+        try:
+            seg = segment.get(name)
+        except ImportError as e:
+            print(f"{name}: skipped ({e})")
+            continue
+        result, _ = segment_compare.run_tool(pairs, seg, a.ckpt, side, data_root=a.data)
+        all_scores[name] = s = segment_compare.scores(result, pairs)
+        print(f"\n== {name} ({seg.version()}) ==")
+        print(json.dumps({k: v for k, v in s.items() if k != "refusal_reasons"}, indent=2))
+        for reason in s["refusal_reasons"]:
+            print(f"  refused: {reason}")
+    if len(all_scores) >= 2:
+        winner, why = segment_compare.decide(all_scores)
+        print(f"\nwinner by the fixed rule: {winner} ({why})")
+        all_scores["_decision"] = {"winner": winner, "why": why}
+    if a.out:
+        Path(a.out).write_text(json.dumps(all_scores, indent=2) + "\n")
+        print(f"saved {a.out} (numbers only)")
+
+
 def _read_export(a) -> None:
     from . import export_loader
     try:
@@ -431,6 +489,39 @@ def main(argv: list[str] | None = None) -> None:
     gr.add_argument("--ckpt", required=True)
     gr.add_argument("--formulas", default=None, help="ANSUR formula file (knee height); default: packaged")
     gr.set_defaults(fn=_geometry_rough)
+
+    sd = sub.add_parser("side-direction", help="S7a: which way BodyM's side silhouettes face")
+    sd.add_argument("--data", required=True)
+    sd.set_defaults(fn=_side_direction)
+
+    pp = sub.add_parser("predict-photos", help="S7a: full measurement set from two phone photos")
+    pp.add_argument("--front", required=True, help="front photo (JPEG/PNG)")
+    pp.add_argument("--side", required=True, help="side photo (JPEG/PNG)")
+    pp.add_argument("--height", type=float, required=True, help="cm")
+    pp.add_argument("--height-kind", choices=("measured", "stated"), default="measured")
+    pp.add_argument("--weight", type=float, default=None)
+    pp.add_argument("--weight-kind", choices=("scale", "stated"), default="stated")
+    pp.add_argument("--sex", choices=("female", "male"), required=True)
+    pp.add_argument("--age-range", default=None)
+    pp.add_argument("--ckpt", required=True)
+    pp.add_argument("--tool", choices=("torchvision", "rembg"), default="torchvision")
+    pp.add_argument("--data", default=None, help="BodyM: side direction and typical weight for r1-r4")
+    pp.add_argument("--bodym-side", choices=("left", "right"), default=None, help="skip the BodyM lookup")
+    for v in ("front", "side"):
+        pp.add_argument(f"--{v}-pitch", type=float, default=None, help="phone tilt from the app (deg)")
+        pp.add_argument(f"--{v}-roll", type=float, default=None)
+    pp.add_argument("--save-silhouettes", default=None, help="folder for the two silhouettes (Drive)")
+    pp.add_argument("--out", default=None)
+    pp.set_defaults(fn=_predict_photos)
+
+    cs = sub.add_parser("compare-segmenters", help="S7a: compare segmentation tools on test photos (D-043)")
+    cs.add_argument("--pairs", required=True, help="CSV: person, front, side, height_cm, sex [, tape codes]")
+    cs.add_argument("--ckpt", required=True)
+    cs.add_argument("--tools", nargs="+", default=["torchvision", "rembg"])
+    cs.add_argument("--data", default=None)
+    cs.add_argument("--bodym-side", choices=("left", "right"), default=None)
+    cs.add_argument("--out", default=None)
+    cs.set_defaults(fn=_compare_segmenters)
 
     rx = sub.add_parser("read-export", help="S7-0: check and summarise an AnthropometryDC export folder")
     rx.add_argument("--folder", required=True)
