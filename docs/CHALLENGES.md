@@ -4,6 +4,7 @@ Problems met while building, what caused them and what fixed them. Newest first.
 
 | Date | Challenge | Cause | Fix | Where |
 | --- | --- | --- | --- | --- |
+| 25 Nov 2026 | CI secret scan failed on every pull request since 19 Nov (tests themselves passed) | The gitleaks GitHub Action now requires a paid licence for organisation accounts | Run the free gitleaks program directly, pinned to v8.21.2: same tool, same check | .github/workflows/ci.yml |
 | 25 Nov 2026 | Changing one person's record in a test changed an already-built result | The result stored a reference to the caller's person record, not a copy | The result keeps its own copy; caught by the output tests | src/anthro/output.py |
 | 25 Nov 2026 | The first printed result showed the model's guess for height although a tape height was typed | Height was routed to the photo model like any other measurement | Measured height is returned as given (`input` source); stated height still estimated (D-029, for Ryan) | src/anthro/suppliers.py |
 | 25 Nov 2026 | r1–r4 checkpoints can't fill a missing weight | They were trained before the typical-weight line was stored | New checkpoints store it; for old ones `--data` refits it from BodyM's training table | src/anthro/predict.py |
