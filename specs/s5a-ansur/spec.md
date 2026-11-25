@@ -123,7 +123,7 @@ Built 25 Nov 2026 (tests/test_s5a.py, fake ANSUR). Waiting for Ryan's Colab run 
 - [x] No ANSUR rows, only coefficients and summary errors, are written anywhere in the repository.
 - [x] Tests on a generated fake ANSUR; coverage stays ≥ 80%.
 
-- [ ] Ryan runs notebooks/05_s5a_ansur.ipynb; the formula file is committed into the package.
+- [x] Ryan ran notebooks/05_s5a_ansur.ipynb (25 Nov); `src/anthro/data/ansur_formulas.json` committed (results in docs/RESULTS.md). Mix not kept for chest or waist.
 
 ## How it is scored
 

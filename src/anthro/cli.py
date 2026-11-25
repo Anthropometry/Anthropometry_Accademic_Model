@@ -184,7 +184,7 @@ def _predict_silhouettes(a) -> None:
         doc = predict.predict(a.front, a.side, a.height, a.sex, a.ckpt, weight_kg=a.weight,
                               age_range=a.age_range, height_kind=a.height_kind, clothing=a.clothing,
                               data_root=a.data, report_path=a.report, routing_path=a.routing,
-                              weight_kind=a.weight_kind, ansur_path=a.ansur)
+                              weight_kind=a.weight_kind, ansur_path=a.ansur, use_ansur=not a.no_ansur)
     except (predict.PredictError, ValueError) as e:
         raise SystemExit(f"refused: {e}") from e
     print(predict.to_text(doc))
@@ -355,6 +355,7 @@ def main(argv: list[str] | None = None) -> None:
     pr.add_argument("--data", default=None, help="BodyM: only for a typical weight with r1-r4")
     pr.add_argument("--out", default=None, help="save the anthro-output/1 JSON here")
     pr.add_argument("--ansur", default=None, help="S5a formula file (default: the packaged one, if any)")
+    pr.add_argument("--no-ansur", action="store_true", help="photo model only (S7-0 behaviour)")
     pr.set_defaults(fn=_predict_silhouettes)
 
     af = sub.add_parser("ansur-fit", help="S5a: fit ANSUR II formulas for the codes BodyM lacks")

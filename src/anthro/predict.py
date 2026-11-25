@@ -163,7 +163,7 @@ def load_report(ckpt: str | Path, report_path: str | Path | None) -> dict | None
 
 def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, height_kind="measured",
             clothing=None, data_root=None, report_path=None, routing_path=None,
-            weight_kind="stated", ansur_path=None) -> dict:
+            weight_kind="stated", ansur_path=None, use_ansur=True) -> dict:
     net, cfg, xs, ys, ck = checkpoint.load(ckpt, "cpu")
     person, warnings = _person(sex, age_range, height_cm, weight_kg, height_kind, clothing,
                                _tw_fit(ck, data_root) if weight_kg is None else None, weight_kind)
@@ -182,7 +182,7 @@ def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, h
     ctx = suppliers.Context(person, values, ["weight_assumed"] if person["weight_kind"] == "assumed" else [],
                             errors, basis)
     chain: list = [suppliers.Input(), suppliers.PhotoModel()]
-    formulas = load_ansur(ansur_path)
+    formulas = load_ansur(ansur_path) if use_ansur else None
     if formulas is not None:
         chain += [suppliers.Ansur(formulas), suppliers.Mix(formulas)]
     estimates = suppliers.route(ctx, chain, suppliers.load_routing(routing_path))

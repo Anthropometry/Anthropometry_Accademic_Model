@@ -166,7 +166,7 @@ def test_typical_weight_needs_both_sexes():
 
 def test_woman_gets_24_measurements_with_test_b_errors(run):
     doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60,
-                          age_range="25-34")
+                          age_range="25-34", use_ansur=False)
     assert output.validate(doc) == [] and len(doc["measurements"]) == 24
     m = doc["measurements"]
     measured = [c for c, v in m.items() if v["quality"] == "measured"]
@@ -183,7 +183,7 @@ def test_missing_weight_gets_a_typical_weight_and_a_warning(run, tmp_path, capsy
     out = tmp_path / "man.json"
     main(["predict-silhouettes", "--front", str(run["front"]), "--side", str(run["side"]),
           "--height", "178", "--sex", "male", "--age-range", "35-44", "--ckpt", str(run["ckpt"]),
-          "--out", str(out)])
+          "--out", str(out), "--no-ansur"])
     text = capsys.readouterr().out
     assert "assumed" in text and "Chest" in text
     doc = json.loads(out.read_text())
@@ -233,7 +233,7 @@ def test_high_bmi_is_warned(run):
 
 def test_no_report_means_no_errors_shown(run, tmp_path):
     doc = predict.predict(run["front"], run["side"], 170, "male", run["ckpt"], weight_kg=70,
-                          report_path=tmp_path / "none.json")
+                          report_path=tmp_path / "none.json", use_ansur=False)
     assert all(v["expected_error_cm"] is None for v in doc["measurements"].values())
     assert any("no evaluation report" in w for w in doc["warnings"])
 
@@ -388,3 +388,9 @@ def test_cli_read_export_prints_counts_only(tmp_path, capsys):
     assert "2 participants" in out and "waist_girth" in out and "P001" not in out
     with pytest.raises(SystemExit, match="refused"):
         main(["read-export", "--folder", str(tmp_path / "nowhere")])
+
+
+def test_packaged_ansur_formulas_are_used_by_default(run):
+    doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60)
+    assert output.validate(doc) == []
+    assert sum(v["quality"] == "derived" for v in doc["measurements"].values()) == 9
