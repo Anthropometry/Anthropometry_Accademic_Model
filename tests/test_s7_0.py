@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import torch
-from conftest import make_fake_bodym
+from conftest import make_hybrid_run
 
 from anthro import catalog, checkpoint, export_loader, output, predict, suppliers, typical_weight
 from anthro.cli import main
@@ -26,23 +26,7 @@ FEMALE_ONLY = {"bust_girth", "underbust_girth", "bust_point_distance", "shoulder
 
 @pytest.fixture(scope="module")
 def run(tmp_path_factory):
-    """Fake BodyM -> geometry -> fit -> hybrid training -> Test-B evaluation, as on Colab."""
-    tmp = tmp_path_factory.mktemp("s7")
-    data = make_fake_bodym(tmp / "bodym")
-    geo_dir, fit_json, out = tmp / "g", tmp / "fit.json", tmp / "r"
-    main(["geometry", "--data", str(data), "--out", str(geo_dir)])
-    main(["geometry-fit", "--data", str(data), "--cache", str(geo_dir), "--out", str(fit_json),
-          "--val-fraction", "0.25"])
-    main(["train", "--data", str(data), "--out", str(out), "--epochs", "1", "--batch-size", "8",
-          "--img-h", "64", "--img-w", "32", "--workers", "0", "--no-pretrained", "--loss", "cm",
-          "--val-fraction", "0.25", "--geo-fit", str(fit_json), "--geo-cache", str(geo_dir),
-          "--cache", str(tmp / "c")])
-    main(["evaluate", "--data", str(data), "--ckpt", str(out / "best.pt"), "--test", "testB",
-          "--geo-cache", str(geo_dir), "--cache", str(tmp / "c")])
-    pid = "testB-0-p0"
-    return {"data": data, "ckpt": out / "best.pt", "tmp": tmp,
-            "front": data / "testB" / "mask" / f"{pid}.png",
-            "side": data / "testB" / "mask_left" / f"{pid}.png"}
+    return make_hybrid_run(tmp_path_factory.mktemp("s7"))
 
 
 # ---------------------------------------------------------------- catalogue

@@ -11,6 +11,8 @@
     anthro predict-silhouettes --front F --side S --height H [--weight W] --sex female
                                --age-range 25-34 --ckpt runs/r4/best.pt [--out result.json]  (S7-0)
     anthro read-export --folder anthro-export-YYYY-MM-DD-HH-MM [--include-practice]     (S7-0)
+    anthro ansur-fit --ansur DRIVE/ansur2 --report runs/r4/eval_report.json --out ansur_formulas.json (S5a)
+    anthro ansur-mix --data bodym --ckpt runs/r4/best.pt --formulas ansur_formulas.json             (S5a)
 
 Why a CLI rather than logic in notebooks: notebooks are hard to review in a pull request and
 easy to run out of order. Notebooks here only call these commands, so what the supervisor
@@ -23,6 +25,7 @@ import argparse
 import json
 from pathlib import Path
 
+import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
@@ -181,13 +184,83 @@ def _predict_silhouettes(a) -> None:
         doc = predict.predict(a.front, a.side, a.height, a.sex, a.ckpt, weight_kg=a.weight,
                               age_range=a.age_range, height_kind=a.height_kind, clothing=a.clothing,
                               data_root=a.data, report_path=a.report, routing_path=a.routing,
-                              weight_kind=a.weight_kind)
+                              weight_kind=a.weight_kind, ansur_path=a.ansur)
     except (predict.PredictError, ValueError) as e:
         raise SystemExit(f"refused: {e}") from e
     print(predict.to_text(doc))
     if a.out:
         Path(a.out).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
         print(f"\nsaved {a.out}")
+
+
+def _ansur_fit(a) -> None:
+    from . import ansur, suppliers
+    df = ansur.load(a.ansur)
+    report = json.loads(Path(a.report).read_text())
+    errors, basis = suppliers.errors_from_report(report, "testB")
+    noise = {n: errors[n] for n in ansur.PHOTO_INPUTS if n in errors}
+    doc, scores = ansur.fit(df, noise, catalog.version(), ansur.fingerprint(a.ansur), basis)
+    print(f"ANSUR II: {int((df.sex == 'female').sum())} women, {int((df.sex == 'male').sum())} men")
+    blur = ", ".join(f"{k} {v:.2f}" for k, v in noise.items())
+    print(f"photo-model blur (Test-B per-person MAE, cm): {blur}")
+    print("\n== held-out error per formula (5 folds by person); 'chosen' = used in the output ==")
+    with pd.option_context("display.width", 200, "display.max_rows", 500):
+        print(scores.to_string(index=False))
+        print("\n== chosen formula by group: BMI bands, and Black participants separately (D-030) ==")
+        print(ansur.subgroup_table(df, doc, noise).to_string(index=False))
+        print("\n== cost of a stated height and weight (basic formula, ANSUR's self-reported values) ==")
+        print(ansur.self_report_check(df).to_string(index=False))
+    Path(a.out).write_text(json.dumps(doc, indent=2) + "\n")
+    print(f"\nsaved {a.out} (coefficients and summary errors only)")
+
+
+def _split_predictions(a, bundle, df, split, name, rows_of=None):
+    """Photo-model predictions for a split, exactly as `anthro evaluate` makes them."""
+    net, cfg, xs, ys, ck = bundle
+    fp, geo_fit = ck["data_fingerprint"], ck.get("geo_fit")
+    cache = a.cache or Path(a.ckpt).parent / "cache"
+    imgs = cache_images(df, a.data, cache, name, cfg.img_h, cfg.img_w, fp)
+    geo = None
+    if geo_fit is not None:
+        geo, _ = gfit.features_for(rows_of if rows_of is not None else df, df, a.data, a.geo_cache or cache,
+                                   split, fp, geo_fit)
+    loader = DataLoader(SilhouetteSet(imgs, df, xs, ys, geo=geo), batch_size=cfg.batch_size)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    return train_mod.predict(net.to(device), loader, ys, device)
+
+
+def _ansur_mix(a) -> None:
+    from . import ansur
+    doc = ansur.load_formulas(a.formulas)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    bundle = checkpoint.load(a.ckpt, device)
+    cfg = bundle[1]
+    splits = load_all(a.data)
+    _, val_df = split_by_person(splits["train"], cfg.val_fraction, cfg.seed)
+    tag = f"s{cfg.seed}v{cfg.val_fraction:g}"
+    val = ansur.mix_table(val_df, _split_predictions(a, bundle, val_df, "train", f"val_{tag}",
+                                                     rows_of=splits["train"]), doc)
+    mix = ansur.mix_decide(val)
+    print(f"== mix test on {len(val)} validation people (5 folds by person) ==")
+    for name, m in mix.items():
+        v = m["validation"]
+        print(f"{name:6s} photo model: MAE {v['photo_model']['mae_cm']:.2f} cm, "
+              f"{v['photo_model']['pct_within']:.1f}% "
+              f"within ±1.5 | mix: MAE {v['mix']['mae_cm']:.2f} cm, {v['mix']['pct_within']:.1f}% "
+              f"-> {'KEPT' if m['kept'] else 'not kept (photo model stays)'}")
+    if any(m["kept"] for m in mix.values()):
+        tb = splits["testB"]
+        test = ansur.mix_table(tb, _split_predictions(a, bundle, tb, "testB", "testB"), doc)
+        scored = ansur.mix_score(test, mix)
+        print(f"\n== kept mixes, scored once on Test-B ({len(test)} people) ==")
+        for name, s in scored.items():
+            mix[name]["testB"] = s
+            print(f"{name:6s} photo model: MAE {s['photo_model']['mae_cm']:.2f} cm, "
+                  f"{s['photo_model']['pct_within']:.1f}% | mix: MAE {s['mix']['mae_cm']:.2f} cm, "
+                  f"{s['mix']['pct_within']:.1f}%")
+    doc["mix"] = mix
+    Path(a.formulas).write_text(json.dumps(doc, indent=2) + "\n")
+    print(f"\nsaved the mix decision into {a.formulas}")
 
 
 def _read_export(a) -> None:
@@ -281,7 +354,22 @@ def main(argv: list[str] | None = None) -> None:
     pr.add_argument("--routing", default=None, help="default: packaged routing_default.json")
     pr.add_argument("--data", default=None, help="BodyM: only for a typical weight with r1-r4")
     pr.add_argument("--out", default=None, help="save the anthro-output/1 JSON here")
+    pr.add_argument("--ansur", default=None, help="S5a formula file (default: the packaged one, if any)")
     pr.set_defaults(fn=_predict_silhouettes)
+
+    af = sub.add_parser("ansur-fit", help="S5a: fit ANSUR II formulas for the codes BodyM lacks")
+    af.add_argument("--ansur", required=True, help="folder with the two ANSUR II public CSV files (on Drive)")
+    af.add_argument("--report", required=True, help="evaluation report with a testB section (blur size)")
+    af.add_argument("--out", required=True)
+    af.set_defaults(fn=_ansur_fit)
+
+    am = sub.add_parser("ansur-mix", help="S5a: does mixing ANSUR into chest/waist beat the photo model?")
+    am.add_argument("--data", required=True)
+    am.add_argument("--ckpt", required=True)
+    am.add_argument("--formulas", required=True, help="ansur_formulas.json from ansur-fit (updated in place)")
+    am.add_argument("--cache", default=None)
+    am.add_argument("--geo-cache", default=None)
+    am.set_defaults(fn=_ansur_mix)
 
     rx = sub.add_parser("read-export", help="S7-0: check and summarise an AnthropometryDC export folder")
     rx.add_argument("--folder", required=True)

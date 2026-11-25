@@ -142,6 +142,20 @@ def height_warnings(person: dict, model_height_cm: float) -> list[str]:
             "(held within 2 cm)"]
 
 
+PACKAGED_ANSUR = "data/ansur_formulas.json"
+
+
+def load_ansur(path):
+    """S5a formulas: the file given, else the packaged one (committed after Ryan's run), else none."""
+    from importlib import resources
+
+    from . import ansur
+    if path:
+        return ansur.load_formulas(path)
+    packaged = resources.files("anthro").joinpath(PACKAGED_ANSUR)
+    return ansur.load_formulas(str(packaged)) if packaged.is_file() else None
+
+
 def load_report(ckpt: str | Path, report_path: str | Path | None) -> dict | None:
     p = Path(report_path) if report_path else Path(ckpt).parent / "eval_report.json"
     return json.loads(p.read_text()) if p.exists() else None
@@ -149,7 +163,7 @@ def load_report(ckpt: str | Path, report_path: str | Path | None) -> dict | None
 
 def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, height_kind="measured",
             clothing=None, data_root=None, report_path=None, routing_path=None,
-            weight_kind="stated") -> dict:
+            weight_kind="stated", ansur_path=None) -> dict:
     net, cfg, xs, ys, ck = checkpoint.load(ckpt, "cpu")
     person, warnings = _person(sex, age_range, height_cm, weight_kg, height_kind, clothing,
                                _tw_fit(ck, data_root) if weight_kg is None else None, weight_kind)
@@ -167,8 +181,11 @@ def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, h
 
     ctx = suppliers.Context(person, values, ["weight_assumed"] if person["weight_kind"] == "assumed" else [],
                             errors, basis)
-    estimates = suppliers.route(ctx, [suppliers.Input(), suppliers.PhotoModel()],
-                                suppliers.load_routing(routing_path))
+    chain: list = [suppliers.Input(), suppliers.PhotoModel()]
+    formulas = load_ansur(ansur_path)
+    if formulas is not None:
+        chain += [suppliers.Ansur(formulas), suppliers.Mix(formulas)]
+    estimates = suppliers.route(ctx, chain, suppliers.load_routing(routing_path))
     model_version = (f"{Path(ckpt).parent.name} (anthro {ck.get('package_version')}, "
                      f"data {ck.get('data_fingerprint')})")
     return output.build(person, estimates, reasons, [*warnings, *FIXED_WARNINGS], model_version)

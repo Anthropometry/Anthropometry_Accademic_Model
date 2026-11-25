@@ -109,17 +109,21 @@ Notebook `notebooks/05_s5a_ansur.ipynb`: check headers, fit, print the scores, r
 
 ## Acceptance criteria (testable)
 
-- [ ] Reads both ANSUR files; converts mm → cm and tenths of kg → kg; refuses missing columns, naming them.
-- [ ] Fits basic and extended formulas per code and sex with a 5-fold split by person; held-out errors printed
+Built 25 Nov 2026 (tests/test_s5a.py, fake ANSUR). Waiting for Ryan's Colab run (notebook 05).
+
+- [x] Reads both ANSUR files; converts mm → cm and tenths of kg → kg; refuses missing columns, naming them.
+- [x] Fits basic and extended formulas per code and sex with a 5-fold split by person; held-out errors printed
       next to a "sex average" baseline.
-- [ ] `ansur_formulas.json` holds plain numbers only and refuses to load for a different catalogue version.
-- [ ] With `--ansur`, a woman's result has the 9 codes above as `derived` (7 for a man), with
+- [x] `ansur_formulas.json` holds plain numbers only and refuses to load for a different catalogue version.
+- [x] With `--ansur`, a woman's result has the 9 codes above as `derived` (7 for a man), with
       `expected_error_cm` and `definition_match`; without it, unchanged from S7-0.
-- [ ] `weight_assumed` is carried onto derived values that used the weight.
-- [ ] Mix test: fitted and judged on validation people only (5-fold by person); kept per measurement only if
+- [x] `weight_assumed` is carried onto derived values that used the weight.
+- [x] Mix test: fitted and judged on validation people only (5-fold by person); kept per measurement only if
       it beats the photo model alone; the decision and both scores are printed and saved.
-- [ ] No ANSUR rows, only coefficients and summary errors, are written anywhere in the repository.
-- [ ] Tests on a generated fake ANSUR; coverage stays ≥ 80%.
+- [x] No ANSUR rows, only coefficients and summary errors, are written anywhere in the repository.
+- [x] Tests on a generated fake ANSUR; coverage stays ≥ 80%.
+
+- [ ] Ryan runs notebooks/05_s5a_ansur.ipynb; the formula file is committed into the package.
 
 ## How it is scored
 

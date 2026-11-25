@@ -74,6 +74,8 @@ anthro evaluate     --data bodym --ckpt runs/r4/best.pt --geo-cache geo --bootst
 anthro geometry-shape --data bodym --cache geo --fit geo/geo_fit.json   # S3c superellipse check
 anthro predict-silhouettes --front F --side S --height 165 --sex female --age-range 25-34 --ckpt runs/r4/best.pt   # S7-0: full set (24 women / 18 men)
 anthro read-export --folder anthro-export-YYYY-MM-DD-HH-MM   # S7-0: check an app export
+anthro ansur-fit --ansur ansur2 --report runs/r4/eval_report.json --out ansur_formulas.json   # S5a
+anthro ansur-mix --data bodym --ckpt runs/r4/best.pt --formulas ansur_formulas.json   # S5a mix test
 ```
 
 ## Tests
