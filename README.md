@@ -72,6 +72,8 @@ anthro geometry-fit --data bodym --cache geo --out geo/geo_fit.json
 anthro train        --data bodym --out runs/r4 --loss cm --img-h 512 --img-w 256 --geo-fit geo/geo_fit.json --geo-cache geo
 anthro evaluate     --data bodym --ckpt runs/r4/best.pt --geo-cache geo --bootstrap 1000
 anthro geometry-shape --data bodym --cache geo --fit geo/geo_fit.json   # S3c superellipse check
+anthro predict-silhouettes --front F --side S --height 165 --sex female --age-range 25-34 --ckpt runs/r4/best.pt   # S7-0: full set (24 women / 18 men)
+anthro read-export --folder anthro-export-YYYY-MM-DD-HH-MM   # S7-0: check an app export
 ```
 
 ## Tests

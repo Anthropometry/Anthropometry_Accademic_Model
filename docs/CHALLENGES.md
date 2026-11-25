@@ -4,6 +4,9 @@ Problems met while building, what caused them and what fixed them. Newest first.
 
 | Date | Challenge | Cause | Fix | Where |
 | --- | --- | --- | --- | --- |
+| 25 Nov 2026 | Changing one person's record in a test changed an already-built result | The result stored a reference to the caller's person record, not a copy | The result keeps its own copy; caught by the output tests | src/anthro/output.py |
+| 25 Nov 2026 | The first printed result showed the model's guess for height although a tape height was typed | Height was routed to the photo model like any other measurement | Measured height is returned as given (`input` source); stated height still estimated (D-029, for Ryan) | src/anthro/suppliers.py |
+| 25 Nov 2026 | r1–r4 checkpoints can't fill a missing weight | They were trained before the typical-weight line was stored | New checkpoints store it; for old ones `--data` refits it from BodyM's training table | src/anthro/predict.py |
 | 19 Nov 2026 | A notebook rerun retrained r4 and overwrote the first r4 model | "Run all" reruns training cells; `anthro train` writes into an existing run folder | Second run recorded as run-to-run variation; proposed: training refuses an existing run folder unless told to overwrite | notebooks/, docs/RESULTS.md |
 | 17 Nov 2026 | Waist improved as an ellipse but got worse after correction; hip still at an edge | Levels were scored with a straight line on C0, not the correction used afterwards; hip matched a fixed height better than "deepest point" | Score levels with the full correction; waist and hip also try fixed heights | src/anthro/geometry_fit.py |
 | 17 Nov 2026 | Level search chose the edge of its grid for chest, waist and hip | Grid set from textbook proportions; BodyM's levels (SMPL vertex loops) sit elsewhere | Wider grid; `geometry-fit` warns when a choice is at the edge | src/anthro/geometry_fit.py |
