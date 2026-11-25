@@ -1,6 +1,8 @@
 # S5a: ANSUR II supplier (formulas for the measurements BodyM doesn't have)
 
-**Status:** draft, 25 Nov 2026. Waiting for Ryan's approval.
+**Status:** approved by Ryan, 25 Nov 2026 (errors for ANSUR's Black participants reported separately, D-030;
+shoulder to knee from the shoulder point, marked `differs`, D-031; chest/waist mix test added; formula file
+committed after Ryan's run)
 **Branch:** `s5a-ansur`
 
 ## Goal (one sentence)
@@ -155,7 +157,12 @@ unblurred). Lengths and girths separate. These numbers come from Ryan's Colab ru
 | Mix is fitted and scored on different people (folds by person) | allow |
 | Mix that loses on validation is not routed | allow |
 
-## Open questions for Ryan
+## Ryan's answers (25 Nov 2026)
+
+1. Approved. 2. Report errors for ANSUR's Black participants separately (D-030). 3. Shoulder to knee from the
+shoulder point, marked `differs` (D-031). 4. Formula file committed after his run.
+
+## Questions as asked
 
 1. **Approve S5a as written?**
 2. **Fairness check:** also report the errors for ANSUR's Black participants separately (yes, recommended /
