@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "anthro-output/1",
+  "title": "Anthropometry model result, version 1",
+  "description": "One person's measurements. Documents the format; anthro.output.validate() enforces the same rules without a schema library. Exactly the person's set appears: 24 codes for women, 18 for men (from the catalogue).",
+  "type": "object",
+  "required": ["schema", "catalogue", "model_version", "created_at", "person", "retake", "warnings", "measurements"],
+  "properties": {
+    "schema": {"const": "anthro-output/1"},
+    "catalogue": {"type": "string", "description": "catalogue version, e.g. anthropometrydc-measurements@807cd85"},
+    "model_version": {"type": "string"},
+    "created_at": {"type": "string", "description": "UTC, YYYY-MM-DDTHH:MM:SSZ"},
+    "person": {
+      "type": "object",
+      "required": ["sex", "height_cm", "height_kind", "weight_kg", "weight_kind"],
+      "properties": {
+        "sex": {"enum": ["female", "male"]},
+        "age_range": {"enum": ["18-24", "25-34", "35-44", "45-54", "55-64", "65+", null]},
+        "height_cm": {"type": "number"},
+        "height_kind": {"enum": ["measured", "stated"]},
+        "weight_kg": {"type": "number"},
+        "weight_kind": {"enum": ["scale", "stated", "assumed"]},
+        "clothing": {"type": ["string", "null"]}
+      }
+    },
+    "retake": {
+      "type": "object",
+      "required": ["flag", "reasons"],
+      "properties": {"flag": {"type": "boolean"}, "reasons": {"type": "array", "items": {"type": "string"}}}
+    },
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "measurements": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["value_cm", "source", "quality", "definition_match", "expected_error_cm", "error_basis", "flags"],
+        "properties": {
+          "value_cm": {"type": ["number", "null"]},
+          "source": {"type": ["string", "null"], "description": "photo_model, ansur, geometry, calibration, own_model"},
+          "quality": {"enum": ["measured", "derived", "rough", "not_available"]},
+          "definition_match": {"enum": ["same", "presumed", "differs", null]},
+          "expected_error_cm": {"type": ["number", "null"], "description": "from a recorded Test-B evaluation (D-028); null if not measured"},
+          "error_basis": {"type": ["string", "null"]},
+          "flags": {"type": "array", "items": {"type": "string"}, "description": "e.g. weight_assumed"}
+        }
+      }
+    }
+  }
+}

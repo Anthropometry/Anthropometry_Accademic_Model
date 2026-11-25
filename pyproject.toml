@@ -29,6 +29,10 @@ anthro = "anthro.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# The measurement catalogue and the output schema ship with the package (S7-0).
+[tool.setuptools.package-data]
+anthro = ["data/*.json"]
+
 [tool.ruff]
 line-length = 110
 target-version = "py310"
