@@ -80,14 +80,15 @@ below runs either on **your laptop** or **on the server**, as marked.
 ### 3.1 Account and server (Oracle website)
 
 1. Sign up at https://www.oracle.com/cloud/free/ . The card is for identity checking; stay on the free
-   tier (do not upgrade to "Pay As You Go" unless you mean to). Pick a **home region** near Ghana that offers
-   Ampere A1 (it cannot be changed later).
+   tier (do not upgrade to "Pay As You Go" unless you mean to). Home region: **South Africa Central
+   (Johannesburg)** (D-049; it cannot be changed later).
 2. Console → **Compute → Instances → Create instance**:
    - **Image:** Canonical Ubuntu 24.04 (the aarch64 / Arm version).
    - **Shape:** Ampere → `VM.Standard.A1.Flex`, **2 OCPUs, 12 GB** (inside the free 4 OCPUs / 24 GB, leaving
      room for a second server later). It must show "Always Free-eligible".
    - **SSH keys:** "Generate a key pair", **download the private key** and keep it safe (it is the only way in).
-   - If it says "Out of capacity", try another availability domain or try again later.
+   - If it says "Out of capacity": Johannesburg has one availability domain, so try again a few hours later,
+     or start at 1 OCPU / 6 GB and resize later (Instance → Edit → shape).
 3. Note the instance's **public IP address** (for example `129.151.10.20`).
 4. **Open the web ports:** instance → subnet → **Security List** → **Add ingress rules**: source `0.0.0.0/0`,
    TCP, destination port `80`; and again for `443`. (Port 22, for SSH, is already open.)
