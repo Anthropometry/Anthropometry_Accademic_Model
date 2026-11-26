@@ -331,3 +331,37 @@ def test_rembg_tool_wiring(monkeypatch):
     monkeypatch.setitem(sys.modules, "rembg", fake)
     seg = segment.RembgSegmenter()
     assert seg(np.zeros((10, 8, 3), np.uint8)).min() == 1.0 and "u2net_human_seg" in seg.version()
+
+
+# ---------------------------------------------------------------- impossible values (first real photos)
+
+def test_model_value_outside_adult_range_is_withheld():
+    from anthro import output, predict
+    est = {"chest_girth": output.Estimate(-91308.5, "photo_model", "measured"),
+           "waist_girth": output.Estimate(80.0, "photo_model", "measured"),
+           "height": output.Estimate(174.0, "input", "measured")}
+    out, notes = predict.sanity_checks(est, "male", {})
+    assert out["chest_girth"].value_cm is None and out["chest_girth"].quality == "not_available"
+    assert out["waist_girth"].value_cm == 80.0 and out["height"].value_cm == 174.0
+    assert any("chest girth withheld: the model gave" in n for n in notes)
+
+
+def test_infinite_outline_feature_is_clipped_and_reported():
+    import numpy as np
+    import pandas as pd
+
+    from anthro import geometry_fit as gfit
+    names = gfit.feature_names()
+    fit_ = {"scaler": {"mean": [0.0] * len(names), "std": [1.0] * len(names)}}
+    t = pd.DataFrame([{n: 1.0 for n in names}])
+    t[names[0]] = np.inf
+    orig = gfit.apply_correction
+    gfit.apply_correction = lambda t_, f_: t_
+    try:
+        Z = gfit.feature_matrix(t, fit_)
+        assert np.isfinite(Z).all() and np.abs(Z).max() <= gfit.FEATURE_LIMIT
+        assert not gfit.features_in_range(t, fit_)
+        t[names[0]] = 1.0
+        assert gfit.features_in_range(t, fit_)
+    finally:
+        gfit.apply_correction = orig

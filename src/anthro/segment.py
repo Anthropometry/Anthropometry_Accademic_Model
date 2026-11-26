@@ -57,7 +57,7 @@ class TorchvisionSegmenter:
 
     def __call__(self, rgb: np.ndarray) -> np.ndarray:
         torch = self._torch
-        x = torch.from_numpy(np.ascontiguousarray(rgb)).permute(2, 0, 1)
+        x = torch.from_numpy(np.array(rgb, copy=True)).permute(2, 0, 1)   # writable copy
         h, w = rgb.shape[:2]
         with torch.no_grad():
             out = self.model(self.prep(x)[None].to(self.device))["out"]

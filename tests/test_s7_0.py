@@ -164,6 +164,19 @@ def test_typical_weight_needs_both_sexes():
 
 # ---------------------------------------------------------------- prediction
 
+@pytest.fixture(autouse=True)
+def wide_ranges(monkeypatch):
+    """The 1-epoch fake model gives far-off numbers; widen the adult ranges so these tests check
+    routing and output shape, not the impossible-value guard (tested in test_s7a)."""
+    real = predict.catalog.by_code
+
+    def wide():
+        d = {k: dict(v) for k, v in real().items()}
+        for v in d.values():
+            v["adult_range_cm"] = [-1e9, 1e9]
+        return d
+    monkeypatch.setattr(predict.catalog, "by_code", wide)
+
 def test_woman_gets_24_measurements_with_test_b_errors(run):
     doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60,
                           age_range="25-34", use_ansur=False)
