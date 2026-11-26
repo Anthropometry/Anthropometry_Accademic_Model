@@ -1,0 +1,3 @@
+# gitleaks false positives, reviewed (one line each: commit:file:rule:line).
+# 26 Nov 2026: a documentation example used a placeholder key text in a curl header; never a real key.
+9285d1ae734104c419aaa5c0a7b3f0d07617aaf9:docs/DEPLOY.md:curl-auth-header:44

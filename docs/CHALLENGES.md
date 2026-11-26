@@ -4,6 +4,7 @@ Problems met while building, what caused them and what fixed them. Newest first.
 
 | Date | Challenge | Cause | Fix | Where |
 | --- | --- | --- | --- | --- |
+| 26 Nov 2026 | CI secret scan failed on docs/DEPLOY.md | A documentation example put a placeholder key text in a curl header; the scanner treats any key written there as a secret | The guide now reads the key into a shell variable without showing it (also the safer habit); that one commit's placeholder is listed in `.gitleaksignore` | docs/DEPLOY.md |
 | 25 Nov 2026 | Front length showed "not available" although ANSUR's formula was fitted | The routing table listed only geometry for front length, so the ANSUR value was never asked for | Routing: own model, calibration, ANSUR, then geometry; a test checks the order | src/anthro/data/routing_default.json |
 | 25 Nov 2026 | Notebook 05: `ANSUR II MALE Public.csv not found` | The loader wanted the exact published file name; downloads often differ (underscores, case, zipped) | Usual name variants and one-file zips accepted; a miss lists what the folder holds | src/anthro/ansur.py |
 | 25 Nov 2026 | A unit mistake in one ANSUR file went unnoticed | The plausibility check looked at both files together, so the good file's median hid the bad one | Checked per file, naming the file; caught by a test | src/anthro/ansur.py |

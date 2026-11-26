@@ -32,17 +32,24 @@ works on the laptop works on the server. The box answers web requests on port 80
 docker build -t anthro-api .
 ```
 
-**Run it** (pick your own long key; this one is only an example):
+**Choose a key and keep it out of files and history.** In each terminal you use, type this; it asks for the
+key without showing it, so it never lands in a file or your shell history:
 
 ```bash
-docker run --rm -p 8080:8080 -e ANTHRO_API_KEY=replace-with-a-long-random-key anthro-api
+read -rs ANTHRO_KEY && export ANTHRO_KEY
 ```
 
-**Check it** (in another terminal):
+**Run it:**
+
+```bash
+docker run --rm -p 8080:8080 -e ANTHRO_API_KEY="$ANTHRO_KEY" anthro-api
+```
+
+**Check it** (in another terminal, after the same `read` line):
 
 ```bash
 curl http://localhost:8080/v1/health
-curl -H "X-API-Key: replace-with-a-long-random-key" \
+curl -H "X-API-Key: $ANTHRO_KEY" \
      -F front=@front.jpg -F side=@side.jpg \
      -F height_cm=174 -F sex=female -F age_range=25-34 -F weight_kg=60 \
      http://localhost:8080/v1/measure
