@@ -21,6 +21,9 @@ row in [discussions.md](discussions.md) approved by Ryan ([policy.md](policy.md)
 | scikit-learn | ≥ 1.3 | Baseline (linear regression), ellipse correction, person-grouped cross-validation | Simple, explainable models; `GroupKFold` keeps a person's photos in one fold |
 | Pillow | ≥ 10.0 | Reading silhouette PNGs; refusing oversized images | Small, safe image reader |
 | tqdm | ≥ 4.66 | Progress bars in Colab | Long steps show progress instead of looking frozen |
+| SciPy (`scipy.ndimage`) | installed with scikit-learn | S7a: connected parts, hole filling and outlines of a photo's body mask | Already present (scikit-learn requires it); no new install |
+| torchvision DeepLabV3-ResNet101 weights | with torchvision | S7a tool A: person segmentation | No new package; weights (~170 MB) download once into torch's cache (D-043) |
+| rembg + onnxruntime (optional, `.[photos]`) | ≥ 2.0.50 / ≥ 1.16 | S7a tool B: person segmentation (`u2net_human_seg`) | Made for cutting people out; MIT licences; tested against tool A on Ryan's photos (D-043) |
 
 Ranges, not exact pins: Colab ships its own PyTorch build, and forcing another wastes minutes per session.
 

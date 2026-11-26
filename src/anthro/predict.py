@@ -236,11 +236,39 @@ def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, h
     estimates, notes = sanity_checks(estimates, person["sex"], rough)
     warnings += notes
     if any("fitted_on_ansur_black_participants" in e.flags for e in estimates.values()):
-        warnings.append("inseam and hip use formulas fitted on ANSUR's Black participants (closer to "
-                        "Ghanaian users; D-032); replaced once Ghanaian tape data exists")
+        # D-032. The text is shown to users, so it carries no internal references.
+        warnings.append("inseam and hip use formulas fitted on the Black participants of a US Army survey "
+                        "(the closest group available for Ghanaian users); replaced once Ghanaian tape "
+                        "data exists")
     model_version = (f"{Path(ckpt).parent.name} (anthro {ck.get('package_version')}, "
                      f"data {ck.get('data_fingerprint')})")
     return output.build(person, estimates, reasons, [*warnings, *FIXED_WARNINGS], model_version)
+
+
+def predict_photos(front_photo, side_photo, height_cm, sex, ckpt, seg, bodym_side: str | None,
+                   save_dir=None, front_tilt=None, side_tilt=None, **kw) -> dict:
+    """S7a: two phone photos -> BodyM-like silhouettes -> the same result as `predict` (plus `inputs`).
+
+    Silhouettes go to `save_dir` when given (for checking; Drive, never the repository), otherwise to a
+    temporary folder that is deleted afterwards."""
+    import tempfile
+
+    from PIL import Image
+
+    from . import photo
+    sil_f = photo.silhouette(photo.load_photo(front_photo), seg, "front", tilt=front_tilt)
+    sil_s = photo.silhouette(photo.load_photo(side_photo), seg, "side", bodym_side, tilt=side_tilt)
+    with tempfile.TemporaryDirectory() as tmp:
+        d = Path(save_dir) if save_dir else Path(tmp)
+        d.mkdir(parents=True, exist_ok=True)
+        fp, sp = d / "front_silhouette.png", d / "side_silhouette.png"
+        Image.fromarray(sil_f.mask).save(fp)
+        Image.fromarray(sil_s.mask).save(sp)
+        doc = predict(fp, sp, height_cm, sex, ckpt, **kw)
+    doc["inputs"] = {"kind": "photos", "segmenter": seg.name, "segmenter_version": seg.version(),
+                     "side_facing": sil_s.facing, "side_mirrored": sil_s.mirrored}
+    doc["warnings"] += sil_f.notes + sil_s.notes
+    return doc
 
 
 def to_text(doc: dict) -> str:

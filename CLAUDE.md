@@ -52,6 +52,9 @@ anthro ansur-fit --ansur DRIVE/ansur2 --report runs/r4/eval_report.json --out FO
 anthro ansur-mix --data bodym --ckpt runs/r4/best.pt --formulas FORMULAS                  # S5a mix test
 anthro ansur-columns --ansur DRIVE/ansur2                                                 # S5b
 anthro geometry-rough --data bodym --ckpt runs/r4/best.pt                                 # S5b
+anthro side-direction --data bodym                                                       # S7a
+anthro predict-photos --front F.jpg --side S.jpg --height H --sex female --ckpt C --tool rembg  # S7a
+anthro compare-segmenters --pairs pairs.csv --ckpt C --out compare.json                  # S7a (D-043)
 python scripts/sync_catalog.py APP/src/lib/measurements.ts --source "repo branch@commit"   # S7-0
 ```
 
