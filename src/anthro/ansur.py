@@ -48,15 +48,19 @@ BLACK = 2                      # ANSUR's DODRace code for Black participants (se
 FOLDS = 5
 
 # App code -> (how to compute it from ANSUR columns, definition match, sexes). Values in mm until converted.
+# D-047 (Ryan, 26 Nov 2026): the waist is at the navel line, which is where ANSUR measures it (omphalion). So
+# ANSUR's waist matches the app, and lengths measured from the waist match too (vertical ones are "presumed":
+# ANSUR gives heights from the floor, the app a tape along the body).
 TARGETS: dict[str, tuple[tuple[str, ...], str]] = {
+    "waist_girth": (("waistcircumference",), "same"),
     "neck_girth": (("neckcircumferencebase",), "same"),
     "shoulder_length": (("shoulderlength",), "same"),
     "hip_girth": (("buttockcircumference",), "same"),
-    "back_length": (("waistbacklength",), "differs"),
+    "back_length": (("waistbacklength",), "same"),
     "inseam": (("crotchheight", "-lateralmalleolusheight"), "presumed"),
-    "outseam": (("waistheightomphalion", "-lateralmalleolusheight"), "differs"),
-    "waist_to_hip": (("waistheightomphalion", "-buttockheight"), "differs"),
-    "waist_to_knee": (("waistheightomphalion", "-kneeheightmidpatella"), "differs"),
+    "outseam": (("waistheightomphalion", "-lateralmalleolusheight"), "presumed"),
+    "waist_to_hip": (("waistheightomphalion", "-buttockheight"), "presumed"),
+    "waist_to_knee": (("waistheightomphalion", "-kneeheightmidpatella"), "presumed"),
     "shoulder_to_knee": (("acromialheight", "-kneeheightmidpatella"), "differs"),   # D-031
 }
 # S5b / D-033: used only when the column exists in both files (seated, so `differs`).

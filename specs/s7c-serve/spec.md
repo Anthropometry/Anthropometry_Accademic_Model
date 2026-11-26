@@ -1,8 +1,7 @@
 # S7c: serve the model as a web API (free hosting) and weigh laptop and phone options
 
 **Status:** approved by Ryan, 26 Nov 2026 (packages approved, D-045; segmentation tool A by default, switchable,
-D-046). Host: Ryan's Azure credit is used up; choosing between Oracle Always Free (recommended) and Google Cloud
-Run. The code, Docker image and laptop route do not depend on the host.
+D-046). Host: Oracle Cloud Always Free (Ryan, 26 Nov 2026; D-048); steps in docs/DEPLOY.md section 3.
 **Branch:** `s7c-serve` (on top of `s7a-photo-silhouette`)
 
 ## Goal (one sentence)

@@ -72,11 +72,125 @@ tunnel when you are done.
 
 **Stop it:** press Ctrl+C in the terminal running `docker run` (and in the tunnel's terminal).
 
-## 3. In the cloud (class demo)
+## 3. In the cloud: Oracle Cloud Always Free (D-048)
 
-The host is being chosen (Ryan, 26 Nov 2026): **Oracle Always Free** (recommended: free permanently, a full
-server you manage) or **Google Cloud Run** (always-free monthly allowance after the trial; needs a billing
-account with a card). The step-by-step section for the chosen host is added here once it is picked.
+A free Arm server (Ampere A1) that you own and manage. Plan about two hours the first time. Every command
+below runs either on **your laptop** or **on the server**, as marked.
+
+### 3.1 Account and server (Oracle website)
+
+1. Sign up at https://www.oracle.com/cloud/free/ . The card is for identity checking; stay on the free
+   tier (do not upgrade to "Pay As You Go" unless you mean to). Pick a **home region** near Ghana that offers
+   Ampere A1 (it cannot be changed later).
+2. Console → **Compute → Instances → Create instance**:
+   - **Image:** Canonical Ubuntu 24.04 (the aarch64 / Arm version).
+   - **Shape:** Ampere → `VM.Standard.A1.Flex`, **2 OCPUs, 12 GB** (inside the free 4 OCPUs / 24 GB, leaving
+     room for a second server later). It must show "Always Free-eligible".
+   - **SSH keys:** "Generate a key pair", **download the private key** and keep it safe (it is the only way in).
+   - If it says "Out of capacity", try another availability domain or try again later.
+3. Note the instance's **public IP address** (for example `129.151.10.20`).
+4. **Open the web ports:** instance → subnet → **Security List** → **Add ingress rules**: source `0.0.0.0/0`,
+   TCP, destination port `80`; and again for `443`. (Port 22, for SSH, is already open.)
+
+### 3.2 First login and firewall (laptop, then server)
+
+```bash
+# laptop: protect the key file, then log in
+chmod 600 ~/Downloads/ssh-key.key
+ssh -i ~/Downloads/ssh-key.key ubuntu@129.151.10.20
+```
+
+```bash
+# server: Oracle's Ubuntu image also blocks ports inside the machine; open 80 and 443 there too
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
+sudo netfilter-persistent save
+sudo apt update && sudo apt upgrade -y
+```
+
+### 3.3 Docker (server)
+
+```bash
+curl -fsSL https://get.docker.com | sudo sh     # Docker's official install script
+sudo usermod -aG docker ubuntu && exit           # log out, then ssh in again so the group applies
+```
+
+### 3.4 Code, model folder and key
+
+```bash
+# server: get the code (public repository; no model inside)
+git clone https://github.com/Anthropometry/Anthropometry_Accademic_Model.git
+```
+
+```bash
+# laptop: copy the private model folder (from notebook 08) to the server
+scp -i ~/Downloads/ssh-key.key serving/model.pt serving/eval_report.json serving/MANIFEST.json \
+    ubuntu@129.151.10.20:~/Anthropometry_Accademic_Model/serving/
+```
+
+```bash
+# server: check the copy is complete (compare with the sha256 values in MANIFEST.json)
+cd ~/Anthropometry_Accademic_Model && sha256sum serving/model.pt serving/eval_report.json
+# make a long random API key, stored only in a file only you can read
+printf 'ANTHRO_API_KEY=%s\n' "$(openssl rand -hex 32)" > ~/anthro.env && chmod 600 ~/anthro.env
+cat ~/anthro.env     # copy the key once into your password manager; give it to the app team privately
+```
+
+### 3.5 Build and run the API (server)
+
+```bash
+cd ~/Anthropometry_Accademic_Model
+docker build -t anthro-api .                     # 20-40 minutes the first time on Arm
+docker run -d --name anthro --restart unless-stopped --env-file ~/anthro.env \
+    -p 127.0.0.1:8080:8080 anthro-api            # reachable only from the server itself (Caddy is the door)
+docker logs -f anthro                            # wait for "Application startup complete", then Ctrl+C
+```
+
+### 3.6 HTTPS with Caddy and a free address (server)
+
+Caddy gets a free HTTPS certificate automatically. For a free web address without buying a domain, use
+`sslip.io`: your IP with dashes, e.g. `129-151-10-20.sslip.io` (it always points to that IP).
+
+```bash
+cd ~ && cat > Caddyfile <<'CADDY'
+129-151-10-20.sslip.io {
+    request_body {
+        max_size 32MB
+    }
+    reverse_proxy 127.0.0.1:8080
+}
+CADDY
+docker run -d --name caddy --restart unless-stopped --network host \
+    -v ~/Caddyfile:/etc/caddy/Caddyfile -v caddy_data:/data caddy:2
+```
+
+**Check it from your laptop:**
+
+```bash
+curl https://129-151-10-20.sslip.io/v1/health
+```
+
+The app then uses `https://129-151-10-20.sslip.io` as the API address (and `/docs` shows the API page).
+Optionally set `ANTHRO_ALLOWED_ORIGINS` in `~/anthro.env` to the app's web address and restart (3.7).
+
+### 3.7 Updating (server)
+
+```bash
+cd ~/Anthropometry_Accademic_Model && git pull
+docker build -t anthro-api . && docker rm -f anthro
+docker run -d --name anthro --restart unless-stopped --env-file ~/anthro.env -p 127.0.0.1:8080:8080 anthro-api
+```
+
+A new model: replace the files in `serving/` (3.4, with a fresh `MANIFEST.json`) and run the three update lines.
+
+### 3.8 Keeping it safe and free
+
+- Only ports 22, 80 and 443 are open; the API itself listens only inside the server.
+- Log in only with the SSH key; never share the key file or put it in a repository.
+- Ubuntu installs security updates automatically; run `sudo apt update && sudo apt upgrade -y` now and then.
+- Oracle can reclaim an Always Free server that stays almost idle for a long time; check its Free Tier page,
+  and use the API now and then.
+- Stay within 4 OCPUs and 24 GB in total, and do not upgrade the account unless you choose to pay.
 
 ## Settings (environment variables)
 
