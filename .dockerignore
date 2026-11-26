@@ -1,0 +1,16 @@
+# Only what the image needs goes in: the package, its metadata and the private ./serving folder.
+.git
+.github
+tests
+notebooks
+docs
+specs
+scripts
+runs
+cache
+bodym
+**/__pycache__
+**/*.png
+**/*.jpg
+.env
+*.key

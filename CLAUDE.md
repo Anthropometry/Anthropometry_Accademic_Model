@@ -55,6 +55,8 @@ anthro geometry-rough --data bodym --ckpt runs/r4/best.pt                       
 anthro side-direction --data bodym                                                       # S7a
 anthro predict-photos --front F.jpg --side S.jpg --height H --sex female --ckpt C --tool rembg  # S7a
 anthro compare-segmenters --pairs pairs.csv --ckpt C --out compare.json                  # S7a (D-043)
+anthro prepare-serving --ckpt runs/r4/best.pt --data bodym --out-dir DRIVE/serving      # S7c
+docker build -t anthro-api . && docker run -p 8080:8080 -e ANTHRO_API_KEY=... anthro-api  # S7c (docs/DEPLOY.md)
 python scripts/sync_catalog.py APP/src/lib/measurements.ts --source "repo branch@commit"   # S7-0
 ```
 

@@ -1,6 +1,8 @@
 # S7c: serve the model as a web API (free hosting) and weigh laptop and phone options
 
-**Status:** draft, 26 Nov 2026. Waiting for Ryan's approval (new packages and a hosting service: questions 1-3).
+**Status:** approved by Ryan, 26 Nov 2026 (packages approved, D-045; segmentation tool A by default, switchable,
+D-046). Host: Ryan's Azure credit is used up; choosing between Oracle Always Free (recommended) and Google Cloud
+Run. The code, Docker image and laptop route do not depend on the host.
 **Branch:** `s7c-serve` (on top of `s7a-photo-silhouette`)
 
 ## Goal (one sentence)
@@ -56,8 +58,9 @@ already familiar to Ryan.
 ### 2. Safety built in
 - **API key:** every request needs a header `X-API-Key`; the key is a host setting (a secret), never in code.
 - **Limits:** each photo at most 15 MB; one request at a time per worker; a timeout.
-- **No storage:** photos are read in memory and dropped after the answer; nothing is saved or logged except
-  the time taken and whether it succeeded (no photos, no measurements, no names in logs).
+- **Nothing kept:** photos are read from memory; the two silhouettes the model reads go to a temporary folder
+  in memory (`/dev/shm` when the machine has it) that is deleted when the answer is sent. Logs hold only the
+  time taken and the status (no photos, no measurements, no names).
 - **CORS:** only the app's own web address may call it from a browser.
 - **HTTPS** from the host.
 - **Licence:** the model is trained on BodyM (CC BY-NC 4.0): the service is for the school project and
@@ -111,12 +114,16 @@ the server version works and the segmentation tool is settled. It becomes its ow
 
 ## Acceptance criteria (testable)
 
-- [ ] `GET /v1/health`, `GET /v1/catalogue`, `POST /v1/measure` answer as in the table, tested with FastAPI's
+Built 26 Nov 2026 (tests/test_s7c.py; CI job `docker` builds and starts the image). Notebook 08 prepares the
+server folder and times the API in Colab. Host-specific deploy steps follow Ryan's host choice.
+
+
+- [x] `GET /v1/health`, `GET /v1/catalogue`, `POST /v1/measure` answer as in the table, tested with FastAPI's
       test client and a fake model and segmenter (no downloads in CI).
-- [ ] A request's answer equals `predict-photos` on the same photos and details.
-- [ ] Refusals come back as 422 with the same reasons; wrong or missing key 401; photo over 15 MB 413.
-- [ ] Nothing is written to disk and no photo or value appears in logs (tested).
-- [ ] `docker build` succeeds and the container answers `/v1/health` (checked in CI without the model files,
+- [x] A request's answer equals `predict-photos` on the same photos and details.
+- [x] Refusals come back as 422 with the same reasons; wrong or missing key 401; photo over 15 MB 413.
+- [x] Nothing is kept after a request and no photo or value appears in logs (tested).
+- [x] `docker build` succeeds and the container answers `/v1/health` (checked in CI without the model files,
       which only the private build has).
 - [ ] Deployed on the chosen host by Ryan following `docs/DEPLOY.md`; timing of 5 requests recorded.
 - [ ] Front-end doc has the API section. Coverage stays ≥ 80%.
@@ -128,7 +135,13 @@ the server version works and the segmentation tool is settled. It becomes its ow
   host's secret settings, kept by Ryan.
 - Non-commercial use only (BodyM licence).
 
-## Open questions for Ryan
+## Ryan's answers (26 Nov 2026)
+
+1. Approved, with the packages (D-045). 2. Host: Azure credit used up; Ryan asked about Cloud Run's always-free
+allowance and is interested in Oracle; choice pending. 3. Model file: explained (it travels inside the image,
+wherever the image runs); inside the image unless the host needs otherwise. 4. Tool A by default (D-046).
+
+## Questions as asked
 
 1. **Approve S7c**, including the new packages (`fastapi`, `uvicorn`, `python-multipart`, and `httpx` for tests)?
 2. **Host:** Azure for Students (no card; recommended), Google Cloud Run (needs a card), Oracle Always Free
