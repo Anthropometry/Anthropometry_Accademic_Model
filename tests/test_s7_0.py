@@ -400,4 +400,5 @@ def test_packaged_black_fitted_inseam_is_flagged_and_warned(run):
     doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60)
     assert "fitted_on_ansur_black_participants" in doc["measurements"]["inseam"]["flags"]
     assert "fitted_on_ansur_black_participants" not in doc["measurements"]["neck_girth"]["flags"]
-    assert any("D-032" in w for w in doc["warnings"])
+    assert any("Black participants" in w for w in doc["warnings"])
+    assert not any("D-0" in w for w in doc["warnings"])            # no internal references shown to users
