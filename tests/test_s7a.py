@@ -369,6 +369,7 @@ def test_infinite_outline_feature_is_clipped_and_reported():
 
 def test_tape_values_that_are_not_numbers_count_as_missing():
     import pandas as pd
+
     from anthro import segment_compare
     result = pd.DataFrame({"person": ["A", "B"], "refused": [None, None], "waist_girth": [80.0, 90.0],
                            "height_flag": [False, False], "retake": [False, False]})
