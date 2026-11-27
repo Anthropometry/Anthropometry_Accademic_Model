@@ -404,3 +404,12 @@ def test_diagnosis_needs_a_hybrid_checkpoint(run, tmp_path, monkeypatch):
     monkeypatch.setattr(checkpoint, "load", lambda p, d: (net, cfg, xs, ys, {**ck, "geo_fit": None}))
     with pytest.raises(ValueError, match="not a hybrid"):
         diagnose.compare_with_bodym("f", "s", 165, 60, "female", run["ckpt"], run["data"], show=False)
+
+
+def test_silhouette_is_crisp_like_bodym():
+    """D-054: BodyM masks are crisp; soft edges put the edge feature far outside training."""
+    from anthro import geometry
+    img = person()
+    sil = photo.silhouette(img, FakeSeg(), "front")
+    assert set(np.unique(sil.mask)) <= {0, 255}
+    assert geometry.edge_softness(sil.mask) == 0.0

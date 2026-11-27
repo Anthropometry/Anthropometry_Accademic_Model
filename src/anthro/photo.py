@@ -10,11 +10,14 @@ What it does
    in the frame; phone tilted beyond the limit (when the app recorded tilt); arms away from the body in the
    side photo.
 4. `to_bodym`: crops head to heel and places the body on BodyM's full-resolution canvas (960 x 720, body
-   about 832 pixels tall), white on black, soft edges kept; side photos are mirrored to face BodyM's way.
+   about 832 pixels tall), white on black, crisp (0/255) edges; side photos are mirrored to face BodyM's way.
 
 Why these decisions
 -------------------
-* BodyM scale and soft edges: the geometry (S3b) and the hybrid model's edge feature were tuned on them.
+* BodyM scale and crisp edges: the geometry (S3b) and the hybrid model's edge feature were tuned on them.
+  Challenge (27 Nov 2026, D-054): the first version kept soft edges, assuming BodyM's were soft. The diagnosis
+  on real photos showed BodyM's edge-softness feature is ~0 for every person, while ours sat about 150,000
+  standard deviations away; the network was fed an input it had never seen. The silhouette is now made crisp.
 * Only small holes are filled (under 0.5% of the body): when feet touch, the gap between the legs is a
   closed hole, and filling it would turn two legs into one block.
 * Side direction (D-044): BodyM's side silhouettes all face one way. Direction is read from the feet: in a
@@ -158,7 +161,7 @@ def to_bodym(soft: np.ndarray, body: np.ndarray) -> np.ndarray:
     canvas = np.zeros(CANVAS, np.uint8)
     y0, x0 = (CANVAS[0] - BODY_PX) // 2, (CANVAS[1] - new_w) // 2
     canvas[y0: y0 + BODY_PX, x0: x0 + new_w] = np.asarray(im)
-    return canvas
+    return np.where(canvas >= 128, 255, 0).astype(np.uint8)     # crisp, like BodyM's masks (D-054)
 
 
 def silhouette(rgb: np.ndarray, seg, view: str, bodym_facing: str | None = None,
