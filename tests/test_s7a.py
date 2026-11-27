@@ -375,4 +375,5 @@ def test_tape_values_that_are_not_numbers_count_as_missing():
                            "height_flag": [False, False], "retake": [False, False]})
     pairs = pd.DataFrame({"person": ["A", "B"], "waist_girth": ["81.0", "42.0_tbr"]})
     s = segment_compare.scores(result, pairs)
-    assert s["tape_errors"]["waist_girth"]["people"] == 1 and s["tape_errors"]["waist_girth"]["mae_cm"] == 1.0
+    w = s["tape_errors"]["waist_girth"]
+    assert w["people"] == 1 and w["mae_cm"] == 1.0 and w["bias_cm"] == -1.0 and w["same_sign_pct"] == 100.0
