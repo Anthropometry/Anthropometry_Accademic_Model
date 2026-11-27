@@ -83,6 +83,9 @@ S1 Load BodyM → S2 Baseline → S3 Photo model → S4 Compare → S5 SMPL-X ex
 - [ ] Per-measurement offset learned with leave-one-out cross-validation
 - [ ] Before/after per person; % within ±1.5 cm; two-measurer disagreement as the floor
 
+- S7c serve the model as a web API (free host), laptop and phone options weighed — built 26 Nov 2026 (API, Docker, laptop route); host Oracle Always Free (D-048), deploy guide written; waiting for Ryan's notebook 08 run and server setup
+- S9 offline on the phone (later): convert and shrink the models, phone-sized segmentation
+
 ## S7 Demo
 
 - [ ] Upload front + side photo, enter height (weight optional), get measurements with "confirm with tape" flags

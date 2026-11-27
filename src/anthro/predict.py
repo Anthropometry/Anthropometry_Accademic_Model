@@ -220,10 +220,24 @@ def load_report(ckpt: str | Path, report_path: str | Path | None) -> dict | None
     return json.loads(p.read_text()) if p.exists() else None
 
 
+_LOADED: dict = {}
+
+
+def load_model(ckpt):
+    """The checkpoint, loaded once per file and kept (S7c: a server answers many requests). Reloaded if the
+    file changes."""
+    p = Path(ckpt)
+    key = (str(p.resolve()), p.stat().st_mtime_ns)
+    if key not in _LOADED:
+        _LOADED.clear()
+        _LOADED[key] = checkpoint.load(ckpt, "cpu")
+    return _LOADED[key]
+
+
 def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, height_kind="measured",
             clothing=None, data_root=None, report_path=None, routing_path=None,
             weight_kind="stated", ansur_path=None, use_ansur=True) -> dict:
-    net, cfg, xs, ys, ck = checkpoint.load(ckpt, "cpu")
+    net, cfg, xs, ys, ck = load_model(ckpt)
     person, warnings = _person(sex, age_range, height_cm, weight_kg, height_kind, clothing,
                                _tw_fit(ck, data_root) if weight_kg is None else None, weight_kind)
     values, reasons, table = run_model(net, cfg, xs, ys, ck, front, side, person)
@@ -261,7 +275,8 @@ def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, h
         warnings.append("inseam and hip use formulas fitted on the Black participants of a US Army survey "
                         "(the closest group available for Ghanaian users); replaced once Ghanaian tape "
                         "data exists")
-    model_version = (f"{Path(ckpt).parent.name} (anthro {ck.get('package_version')}, "
+    name = (ck.get("extra") or {}).get("model_name") or Path(ckpt).parent.name   # S7c: set by prepare-serving
+    model_version = (f"{name} (anthro {ck.get('package_version')}, "
                      f"data {ck.get('data_fingerprint')})")
     return output.build(person, estimates, reasons, [*warnings, *FIXED_WARNINGS], model_version)
 
@@ -272,6 +287,7 @@ def predict_photos(front_photo, side_photo, height_cm, sex, ckpt, seg, bodym_sid
 
     Silhouettes go to `save_dir` when given (for checking; Drive, never the repository), otherwise to a
     temporary folder that is deleted afterwards."""
+    import os
     import tempfile
 
     from PIL import Image
@@ -279,7 +295,11 @@ def predict_photos(front_photo, side_photo, height_cm, sex, ckpt, seg, bodym_sid
     from . import photo
     sil_f = photo.silhouette(photo.load_photo(front_photo), seg, "front", tilt=front_tilt)
     sil_s = photo.silhouette(photo.load_photo(side_photo), seg, "side", bodym_side, tilt=side_tilt)
-    with tempfile.TemporaryDirectory() as tmp:
+    # A memory-backed folder when the machine has one (Linux /dev/shm): nothing reaches the disk (S7c).
+    # Safe: TemporaryDirectory makes a private (0700), randomly named folder inside it.
+    mem = "/dev/shm"  # noqa: S108
+    shm = mem if os.path.isdir(mem) and os.access(mem, os.W_OK) else None
+    with tempfile.TemporaryDirectory(dir=shm) as tmp:
         d = Path(save_dir) if save_dir else Path(tmp)
         d.mkdir(parents=True, exist_ok=True)
         fp, sp = d / "front_silhouette.png", d / "side_silhouette.png"

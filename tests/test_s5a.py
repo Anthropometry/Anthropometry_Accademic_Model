@@ -125,7 +125,8 @@ def test_fit_covers_the_right_codes_per_sex_and_is_plain_json(formulas):
     assert json.loads(json.dumps(doc)) == doc and doc["format"] == ansur.FORMAT
     women = {c for c, s in doc["formulas"].items() if "female" in s}
     men = {c for c, s in doc["formulas"].items() if "male" in s}
-    assert len(women) == 9 and len(men) == 7
+    assert len(women) == 10 and len(men) == 8                        # waist at the navel added (D-047)
+    assert doc["formulas"]["waist_girth"]["male"]["definition_match"] == "same"
     assert doc["formulas"]["shoulder_to_knee"]["female"]["definition_match"] == "differs"   # D-031
     assert {"sex average", "basic", "extended, blurred", "extended, tape inputs"} <= set(scores["formula"])
     assert scores.groupby(["code", "sex"])["chosen"].sum().eq(1).all()
@@ -151,7 +152,7 @@ def test_subgroups_include_black_participants_and_bmi_bands(table, formulas):
 
 def test_self_report_check_runs(table):
     t = ansur.self_report_check(table)
-    assert len(t) == 16 and (t["stated_mae_cm"] > 0).all()
+    assert len(t) == 18 and (t["stated_mae_cm"] > 0).all()
 
 
 def test_formula_file_for_another_catalogue_is_refused(formulas, tmp_path):
@@ -220,7 +221,7 @@ def test_woman_gets_9_derived_codes_and_man_7(run, formulas, tmp_path):
     p.write_text(json.dumps(formulas[0]))
     w = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60, ansur_path=p)
     m = predict.predict(run["front"], run["side"], 178, "male", run["ckpt"], weight_kg=80, ansur_path=p)
-    for doc, n in ((w, 9), (m, 7)):
+    for doc, n in ((w, 10), (m, 8)):
         assert output.validate(doc) == []
         derived = [c for c, v in doc["measurements"].items() if v["quality"] == "derived"]
         assert len(derived) == n

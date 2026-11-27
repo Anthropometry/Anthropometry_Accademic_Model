@@ -57,7 +57,7 @@ def test_bodym_chest_becomes_bust_for_women_and_chest_for_men():
     women, men = catalog.bodym_to_codes("female", vals), catalog.bodym_to_codes("male", vals)
     assert "bust_girth" in women and "chest_girth" not in women
     assert "chest_girth" in men and "bust_girth" not in men
-    assert women["hip_girth"][1] == "differs" and women["waist_girth"][1] == "same"
+    assert women["hip_girth"][1] == "differs" and women["waist_girth"][1] == "differs"     # D-047
     assert not set(catalog.BODYM_INTERNAL_ONLY) & {v[2] for v in women.values()}
 
 
@@ -415,3 +415,11 @@ def test_packaged_black_fitted_inseam_is_flagged_and_warned(run):
     assert "fitted_on_ansur_black_participants" not in doc["measurements"]["neck_girth"]["flags"]
     assert any("Black participants" in w for w in doc["warnings"])
     assert not any("D-0" in w for w in doc["warnings"])            # no internal references shown to users
+
+
+def test_waist_falls_back_to_the_photo_model_marked_differs_until_ansur_is_refit(run):
+    # The packaged formula file predates D-047 (no waist formula): the photo model's waist is used, honestly
+    # marked as a different definition.
+    doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60)
+    w = doc["measurements"]["waist_girth"]
+    assert w["source"] == "photo_model" and w["definition_match"] == "differs"

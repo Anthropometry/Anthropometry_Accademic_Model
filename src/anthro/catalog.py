@@ -35,7 +35,9 @@ SEXES = ("female", "male")
 # BodyM name -> (app code, definition match). Chest depends on sex.
 BODYM_TO_CODE: dict[str, dict[str, tuple[str, str]]] = {
     "height": {"*": ("height", "same")},
-    "waist": {"*": ("waist_girth", "same")},           # narrowest point, as the app (level search, S3b)
+    # D-047 (Ryan, 26 Nov 2026): the waist is at the navel line. BodyM's waist is its own virtual tape, so it
+    # no longer matches the app's definition.
+    "waist": {"*": ("waist_girth", "differs")},
     "chest": {"male": ("chest_girth", "presumed"), "female": ("bust_girth", "presumed")},
     "hip": {"*": ("hip_girth", "differs")},             # BodyM: fixed height; app: fullest part
     "shoulder-breadth": {"*": ("shoulder_width", "differs")},

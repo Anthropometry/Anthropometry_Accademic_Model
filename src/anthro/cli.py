@@ -18,6 +18,7 @@
     anthro side-direction --data bodym                                                               (S7a)
     anthro predict-photos --front F.jpg --side S.jpg --height H --sex female --ckpt C --tool rembg   (S7a)
     anthro compare-segmenters --pairs pairs.csv --ckpt C --out compare.json                         (S7a)
+    anthro prepare-serving --ckpt runs/r4/best.pt --data bodym --out-dir DRIVE/serving             (S7c)
 
 Why a CLI rather than logic in notebooks: notebooks are hard to review in a pull request and
 easy to run out of order. Notebooks here only call these commands, so what the supervisor
@@ -370,6 +371,16 @@ def _compare_segmenters(a) -> None:
         print(f"saved {a.out} (numbers only)")
 
 
+def _prepare_serving(a) -> None:
+    from . import serving_files
+    try:
+        m = serving_files.prepare(a.ckpt, a.data, a.out_dir)
+    except ValueError as e:
+        raise SystemExit(f"refused: {e}") from e
+    print(json.dumps(m, indent=2))
+    print(f"\nserver folder ready: {a.out_dir} (keep it private: never in GitHub)")
+
+
 def _read_export(a) -> None:
     from . import export_loader
     try:
@@ -522,6 +533,12 @@ def main(argv: list[str] | None = None) -> None:
     cs.add_argument("--bodym-side", choices=("left", "right"), default=None)
     cs.add_argument("--out", default=None)
     cs.set_defaults(fn=_compare_segmenters)
+
+    ps = sub.add_parser("prepare-serving", help="S7c: the model folder a server needs")
+    ps.add_argument("--ckpt", required=True)
+    ps.add_argument("--data", required=True, help="BodyM (typical weight, side direction)")
+    ps.add_argument("--out-dir", required=True)
+    ps.set_defaults(fn=_prepare_serving)
 
     rx = sub.add_parser("read-export", help="S7-0: check and summarise an AnthropometryDC export folder")
     rx.add_argument("--folder", required=True)
