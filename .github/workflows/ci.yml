@@ -19,7 +19,7 @@ jobs:
           cache: pip
       # CPU build of PyTorch: CI only runs the fake-data tests, so the large GPU build isn't needed.
       - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,serve]"
       - run: ruff check .
       # Coverage is measured on every pull request; the run fails below 80% (pyproject.toml).
       - run: pytest --cov --cov-report=term-missing
@@ -46,3 +46,20 @@ jobs:
         run: |
           curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz gitleaks
           ./gitleaks detect --source . --redact --verbose
+
+  # S7c: the API image builds and starts (without the private model, so /v1/health must say "not ready").
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image (no model, no baked weights)
+        run: docker build --build-arg BAKE_WEIGHTS=0 -t anthro-api .
+      - name: Start it and check that it answers
+        run: |
+          docker run -d --name api -p 8080:8080 -e ANTHRO_API_KEY=ci-only anthro-api
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /tmp/h.json -w '%{http_code}' http://localhost:8080/v1/health || true)
+            [ "$code" = "503" ] && grep -q "not ready" /tmp/h.json && echo "answers: $(cat /tmp/h.json)" && exit 0
+            sleep 2
+          done
+          docker logs api; exit 1

@@ -55,8 +55,10 @@ class Silhouette:
     notes: list[str] = field(default_factory=list)
 
 
-def load_photo(path: str | Path) -> np.ndarray:
-    with Image.open(path) as im:
+def load_photo(src: str | Path | bytes) -> np.ndarray:
+    """A photo from a file path, or from bytes received by the web API (S7c: never written to disk)."""
+    import io
+    with Image.open(io.BytesIO(src) if isinstance(src, bytes) else src) as im:
         n = im.width * im.height
         if n > MAX_PHOTO_PIXELS:
             raise PhotoError(f"photo too large ({im.width}x{im.height})")

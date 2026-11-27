@@ -58,6 +58,7 @@
   "waist_girth": [
     "own_model",
     "calibration",
+    "ansur",
     "mix",
     "photo_model"
   ],
