@@ -81,7 +81,10 @@ def scores(result: pd.DataFrame, pairs: pd.DataFrame) -> dict:
     errors = {}
     if tape_codes and len(ok):
         pred = ok.groupby("person")[tape_codes].mean()
-        tape = pairs.groupby("person")[tape_codes].mean().loc[pred.index]
+        # Tape values that are not plain numbers (e.g. "42.0_tbr", a value the measurer marked for
+        # re-checking) count as not measured rather than stopping the comparison.
+        taped = pairs[["person"]].assign(**{c: pd.to_numeric(pairs[c], errors="coerce") for c in tape_codes})
+        tape = taped.groupby("person")[tape_codes].mean().reindex(pred.index)
         for c in tape_codes:
             e = (pred[c] - tape[c]).abs().dropna()
             if len(e):

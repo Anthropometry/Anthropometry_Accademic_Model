@@ -365,3 +365,13 @@ def test_infinite_outline_feature_is_clipped_and_reported():
         assert gfit.features_in_range(t, fit_)
     finally:
         gfit.apply_correction = orig
+
+
+def test_tape_values_that_are_not_numbers_count_as_missing():
+    import pandas as pd
+    from anthro import segment_compare
+    result = pd.DataFrame({"person": ["A", "B"], "refused": [None, None], "waist_girth": [80.0, 90.0],
+                           "height_flag": [False, False], "retake": [False, False]})
+    pairs = pd.DataFrame({"person": ["A", "B"], "waist_girth": ["81.0", "42.0_tbr"]})
+    s = segment_compare.scores(result, pairs)
+    assert s["tape_errors"]["waist_girth"]["people"] == 1 and s["tape_errors"]["waist_girth"]["mae_cm"] == 1.0
