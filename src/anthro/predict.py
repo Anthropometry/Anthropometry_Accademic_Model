@@ -108,6 +108,16 @@ def run_model(net, cfg, xs, ys, ck, front_path, side_path, person):
                            SEX_COL: [person["sex"]], SUBJECT_COL: ["person"]})
         t = gfit.level_table(df, gfit.single_cache(m), geo_fit["params"])
         g = torch.from_numpy(gfit.feature_matrix(t, geo_fit))
+        if m is not None and not gfit.features_in_range(t, geo_fit):
+            reasons.append("the outline gave measurements far outside anything seen in training (often the "
+                           "head, feet or an arm missing from the outline, or something extra included): "
+                           "retake the photos")
+        merged = [lv for lv in ("chest", "waist") if m is not None and t[f"{lv}_merge"].iloc[0] > 0.5]
+        if merged:
+            # BodyM people always show a gap between arm and torso; when the arm touches the body, its width
+            # is counted as torso and girths come out far too large (+20 cm waist on real photos, D-054).
+            reasons.append(f"the arms touch the body at the {' and '.join(merged)} in the front photo: hold "
+                           "the arms away from the body (about 45 degrees) with a clear gap at the waist")
         table = gfit.apply_correction(t, geo_fit)
         if m is not None and not bool(t["geo_ok"].iloc[0]):
             reasons.append("chest, waist or hip level could not be found on the outline: retake the photos")
@@ -146,12 +156,14 @@ def sanity_checks(estimates: dict, sex: str, rough: dict) -> tuple[dict, list[st
         if value is None and code in catalog.codes_for(sex):
             notes.append(f"{labels[code]['label'].lower()} not available: {why}")
     for code, e in estimates.items():
-        if e.quality != "rough":
+        if e.value_cm is None or e.quality == "measured" and e.source == "input":
             continue
         lo, hi = labels[code]["adult_range_cm"]
         if not lo <= e.value_cm <= hi:
+            # Never show an impossible number, whatever produced it (S7a fix).
             out[code] = output.NOT_AVAILABLE
-            notes.append(f"{labels[code]['label'].lower()} withheld: the outline gave {e.value_cm:.1f} cm, "
+            what = "the outline" if e.quality == "rough" else "the model"
+            notes.append(f"{labels[code]['label'].lower()} withheld: {what} gave {e.value_cm:.1f} cm, "
                          f"outside the adult range {lo}-{hi} cm")
 
     def v(code):
@@ -186,6 +198,8 @@ def height_warnings(person: dict, model_height_cm: float) -> list[str]:
             f"from the stated height; reported as {person['height_cm'] + (2 if gap > 0 else -2):.1f} cm "
             "(held within 2 cm)"]
 
+
+IMPLAUSIBLE_HEIGHT_GAP_CM = 10.0   # beyond this the photos, not the person, are the likely problem
 
 PACKAGED_ANSUR = "data/ansur_formulas.json"
 
@@ -249,6 +263,13 @@ def predict(front, side, height_cm, sex, ckpt, weight_kg=None, age_range=None, h
     estimates = suppliers.route(ctx, chain, suppliers.load_routing(routing_path))
     estimates, notes = sanity_checks(estimates, person["sex"], rough)
     warnings += notes
+    if any("withheld" in n and "the model gave" in n for n in notes):
+        reasons.append("some measurements came out impossible and were withheld: retake the photos with the "
+                       "whole body in view, head to feet, and nothing covering the outline")
+    if abs(values["height"] - person["height_cm"]) > IMPLAUSIBLE_HEIGHT_GAP_CM:
+        reasons.append(f"the photos do not match the given height (more than "
+                       f"{IMPLAUSIBLE_HEIGHT_GAP_CM:g} cm apart): check the typed height and retake with the "
+                       "whole body in view")
     if any("fitted_on_ansur_black_participants" in e.flags for e in estimates.values()):
         # D-032. The text is shown to users, so it carries no internal references.
         warnings.append("inseam and hip use formulas fitted on the Black participants of a US Army survey "

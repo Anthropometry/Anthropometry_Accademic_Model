@@ -227,7 +227,22 @@ def feature_matrix(t: pd.DataFrame, fit_: dict) -> np.ndarray:
     X = t[feature_names()].to_numpy(np.float64)
     mean, std = np.asarray(fit_["scaler"]["mean"]), np.asarray(fit_["scaler"]["std"])
     Z = (X - mean) / std
-    return np.nan_to_num(Z, nan=0.0).astype(np.float32)
+    # A broken outline can give an infinite or huge feature (e.g. a near-zero width); the network then
+    # extrapolates to impossible values. Such values are clipped here and reported by `features_in_range`.
+    Z = np.nan_to_num(Z, nan=0.0, posinf=FEATURE_LIMIT, neginf=-FEATURE_LIMIT)
+    return np.clip(Z, -FEATURE_LIMIT, FEATURE_LIMIT).astype(np.float32)
+
+
+FEATURE_LIMIT = 6.0   # standard deviations from the training average
+
+
+def features_in_range(t: pd.DataFrame, fit_: dict) -> bool:
+    """False when any measured outline feature is infinite or beyond FEATURE_LIMIT standard deviations."""
+    t = apply_correction(t, fit_)
+    X = t[feature_names()].to_numpy(np.float64)
+    Z = (X - np.asarray(fit_["scaler"]["mean"])) / np.asarray(fit_["scaler"]["std"])
+    Z = Z[~np.isnan(Z)]
+    return bool(np.isfinite(Z).all() and (np.abs(Z) <= FEATURE_LIMIT).all())
 
 
 # ---------------------------------------------------------------- fitting (E1, E2)

@@ -36,6 +36,9 @@ class Segmenter(Protocol):
     def __call__(self, rgb: np.ndarray) -> np.ndarray: ...
 
 
+SEG_SHORT_SIDE = 1024   # px, short side of the photo as seen by DeepLab (was 520)
+
+
 class TorchvisionSegmenter:
     """A: DeepLabV3-ResNet101 (torchvision), probability of COCO class 15 'person'."""
 
@@ -49,7 +52,10 @@ class TorchvisionSegmenter:
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.weights = DeepLabV3_ResNet101_Weights.DEFAULT
         self.model = deeplabv3_resnet101(weights=self.weights).eval().to(self.device)
-        self.prep = self.weights.transforms()
+        # The weights' own transform shrinks the photo to 520 px on the short side; DeepLab then works on a
+        # grid 8x coarser still, and a narrow gap between arm and waist closes, so the arm merges into the
+        # torso outline (D-054, seen on real photos). Run at SEG_SHORT_SIDE instead, normalised the same way.
+        self.prep = self.weights.transforms(resize_size=SEG_SHORT_SIDE)
 
     def version(self) -> str:
         import torchvision
@@ -57,7 +63,7 @@ class TorchvisionSegmenter:
 
     def __call__(self, rgb: np.ndarray) -> np.ndarray:
         torch = self._torch
-        x = torch.from_numpy(np.ascontiguousarray(rgb)).permute(2, 0, 1)
+        x = torch.from_numpy(np.array(rgb, copy=True)).permute(2, 0, 1)   # writable copy
         h, w = rgb.shape[:2]
         with torch.no_grad():
             out = self.model(self.prep(x)[None].to(self.device))["out"]

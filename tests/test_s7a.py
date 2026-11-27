@@ -331,3 +331,98 @@ def test_rembg_tool_wiring(monkeypatch):
     monkeypatch.setitem(sys.modules, "rembg", fake)
     seg = segment.RembgSegmenter()
     assert seg(np.zeros((10, 8, 3), np.uint8)).min() == 1.0 and "u2net_human_seg" in seg.version()
+
+
+# ---------------------------------------------------------------- impossible values (first real photos)
+
+def test_model_value_outside_adult_range_is_withheld():
+    from anthro import output, predict
+    est = {"chest_girth": output.Estimate(-91308.5, "photo_model", "measured"),
+           "waist_girth": output.Estimate(80.0, "photo_model", "measured"),
+           "height": output.Estimate(174.0, "input", "measured")}
+    out, notes = predict.sanity_checks(est, "male", {})
+    assert out["chest_girth"].value_cm is None and out["chest_girth"].quality == "not_available"
+    assert out["waist_girth"].value_cm == 80.0 and out["height"].value_cm == 174.0
+    assert any("chest girth withheld: the model gave" in n for n in notes)
+
+
+def test_infinite_outline_feature_is_clipped_and_reported():
+    import numpy as np
+    import pandas as pd
+
+    from anthro import geometry_fit as gfit
+    names = gfit.feature_names()
+    fit_ = {"scaler": {"mean": [0.0] * len(names), "std": [1.0] * len(names)}}
+    t = pd.DataFrame([{n: 1.0 for n in names}])
+    t[names[0]] = np.inf
+    orig = gfit.apply_correction
+    gfit.apply_correction = lambda t_, f_: t_
+    try:
+        Z = gfit.feature_matrix(t, fit_)
+        assert np.isfinite(Z).all() and np.abs(Z).max() <= gfit.FEATURE_LIMIT
+        assert not gfit.features_in_range(t, fit_)
+        t[names[0]] = 1.0
+        assert gfit.features_in_range(t, fit_)
+    finally:
+        gfit.apply_correction = orig
+
+
+def test_tape_values_that_are_not_numbers_count_as_missing():
+    import pandas as pd
+
+    from anthro import segment_compare
+    result = pd.DataFrame({"person": ["A", "B"], "refused": [None, None], "waist_girth": [80.0, 90.0],
+                           "height_flag": [False, False], "retake": [False, False]})
+    pairs = pd.DataFrame({"person": ["A", "B"], "waist_girth": ["81.0", "42.0_tbr"]})
+    s = segment_compare.scores(result, pairs)
+    w = s["tape_errors"]["waist_girth"]
+    assert w["people"] == 1 and w["mae_cm"] == 1.0 and w["bias_cm"] == -1.0 and w["same_sign_pct"] == 100.0
+
+
+# ---------------------------------------------------------------- diagnosis: phone outline vs BodyM
+
+def test_diagnosis_lists_features_for_the_phone_pair_and_bodym_neighbours(run, tmp_path, monkeypatch):
+    from anthro import diagnose, geometry_fit, segment
+    front, side = _photos_from_run(run, tmp_path)
+    monkeypatch.setattr(segment, "get", lambda name: FakeSeg())
+    t = diagnose.compare_with_bodym(front, side, 165, 60, "female", run["ckpt"], run["data"], n=2, show=False)
+    assert "phone" in t.columns and len(t) == len(geometry_fit.feature_names())
+    assert any(c.startswith("bodym") for c in t.columns)
+    phone = t["phone"].dropna().abs()
+    assert list(phone) == sorted(phone, reverse=True)          # furthest from training first
+
+
+def test_bodym_neighbours_are_same_sex_and_nearest_height(run):
+    from anthro import diagnose
+    nb = diagnose.bodym_neighbours(run["data"], "male", 175, n=2)
+    assert len(nb) == 2 and set(nb["gender"].str.lower()) == {"male"}
+
+
+def test_diagnosis_needs_a_hybrid_checkpoint(run, tmp_path, monkeypatch):
+    from anthro import checkpoint, diagnose
+    net, cfg, xs, ys, ck = checkpoint.load(run["ckpt"], "cpu")
+    monkeypatch.setattr(checkpoint, "load", lambda p, d: (net, cfg, xs, ys, {**ck, "geo_fit": None}))
+    with pytest.raises(ValueError, match="not a hybrid"):
+        diagnose.compare_with_bodym("f", "s", 165, 60, "female", run["ckpt"], run["data"], show=False)
+
+
+def test_silhouette_is_crisp_like_bodym():
+    """D-054: BodyM masks are crisp; soft edges put the edge feature far outside training."""
+    from anthro import geometry
+    img = person()
+    sil = photo.silhouette(img, FakeSeg(), "front")
+    assert set(np.unique(sil.mask)) <= {0, 255}
+    assert geometry.edge_softness(sil.mask) == 0.0
+
+
+def test_arms_touching_the_waist_give_a_clear_retake_reason(run, monkeypatch):
+    from anthro import geometry_fit
+    real = geometry_fit.level_table
+
+    def merged(*a, **k):
+        t = real(*a, **k)
+        t["waist_merge"] = 1.0
+        return t
+    monkeypatch.setattr(geometry_fit, "level_table", merged)
+    doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60)
+    assert any("arms touch the body at the" in r and "waist" in r for r in doc["retake"]["reasons"])

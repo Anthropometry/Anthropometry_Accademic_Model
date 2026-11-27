@@ -81,11 +81,18 @@ def scores(result: pd.DataFrame, pairs: pd.DataFrame) -> dict:
     errors = {}
     if tape_codes and len(ok):
         pred = ok.groupby("person")[tape_codes].mean()
-        tape = pairs.groupby("person")[tape_codes].mean().loc[pred.index]
+        # Tape values that are not plain numbers (e.g. "42.0_tbr", a value the measurer marked for
+        # re-checking) count as not measured rather than stopping the comparison.
+        taped = pairs[["person"]].assign(**{c: pd.to_numeric(pairs[c], errors="coerce") for c in tape_codes})
+        tape = taped.groupby("person")[tape_codes].mean().reindex(pred.index)
         for c in tape_codes:
-            e = (pred[c] - tape[c]).abs().dropna()
+            d = (pred[c] - tape[c]).dropna()
+            e = d.abs()
             if len(e):
-                errors[c] = {"mae_cm": round(float(e.mean()), 2),
+                # bias: + means the model reads larger than the tape. A large bias with every error of the
+                # same sign points at a definition or clothing difference, not at random model error.
+                errors[c] = {"mae_cm": round(float(e.mean()), 2), "bias_cm": round(float(d.mean()), 2),
+                             "same_sign_pct": round(float(max((d > 0).mean(), (d < 0).mean()) * 100), 1),
                              "pct_within_1.5": round(float((e <= 1.5).mean() * 100), 1),
                              "people": int(len(e))}
     out["tape_errors"] = errors
