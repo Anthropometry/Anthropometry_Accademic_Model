@@ -377,3 +377,30 @@ def test_tape_values_that_are_not_numbers_count_as_missing():
     s = segment_compare.scores(result, pairs)
     w = s["tape_errors"]["waist_girth"]
     assert w["people"] == 1 and w["mae_cm"] == 1.0 and w["bias_cm"] == -1.0 and w["same_sign_pct"] == 100.0
+
+
+# ---------------------------------------------------------------- diagnosis: phone outline vs BodyM
+
+def test_diagnosis_lists_features_for_the_phone_pair_and_bodym_neighbours(run, tmp_path, monkeypatch):
+    from anthro import diagnose, geometry_fit, segment
+    front, side = _photos_from_run(run, tmp_path)
+    monkeypatch.setattr(segment, "get", lambda name: FakeSeg())
+    t = diagnose.compare_with_bodym(front, side, 165, 60, "female", run["ckpt"], run["data"], n=2, show=False)
+    assert "phone" in t.columns and len(t) == len(geometry_fit.feature_names())
+    assert any(c.startswith("bodym") for c in t.columns)
+    phone = t["phone"].dropna().abs()
+    assert list(phone) == sorted(phone, reverse=True)          # furthest from training first
+
+
+def test_bodym_neighbours_are_same_sex_and_nearest_height(run):
+    from anthro import diagnose
+    nb = diagnose.bodym_neighbours(run["data"], "male", 175, n=2)
+    assert len(nb) == 2 and set(nb["gender"].str.lower()) == {"male"}
+
+
+def test_diagnosis_needs_a_hybrid_checkpoint(run, tmp_path, monkeypatch):
+    from anthro import checkpoint, diagnose
+    net, cfg, xs, ys, ck = checkpoint.load(run["ckpt"], "cpu")
+    monkeypatch.setattr(checkpoint, "load", lambda p, d: (net, cfg, xs, ys, {**ck, "geo_fit": None}))
+    with pytest.raises(ValueError, match="not a hybrid"):
+        diagnose.compare_with_bodym("f", "s", 165, 60, "female", run["ckpt"], run["data"], show=False)
