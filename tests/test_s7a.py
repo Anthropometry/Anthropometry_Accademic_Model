@@ -413,3 +413,16 @@ def test_silhouette_is_crisp_like_bodym():
     sil = photo.silhouette(img, FakeSeg(), "front")
     assert set(np.unique(sil.mask)) <= {0, 255}
     assert geometry.edge_softness(sil.mask) == 0.0
+
+
+def test_arms_touching_the_waist_give_a_clear_retake_reason(run, monkeypatch):
+    from anthro import geometry_fit
+    real = geometry_fit.level_table
+
+    def merged(*a, **k):
+        t = real(*a, **k)
+        t["waist_merge"] = 1.0
+        return t
+    monkeypatch.setattr(geometry_fit, "level_table", merged)
+    doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60)
+    assert any("arms touch the body at the" in r and "waist" in r for r in doc["retake"]["reasons"])

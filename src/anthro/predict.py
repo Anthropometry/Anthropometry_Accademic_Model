@@ -112,6 +112,12 @@ def run_model(net, cfg, xs, ys, ck, front_path, side_path, person):
             reasons.append("the outline gave measurements far outside anything seen in training (often the "
                            "head, feet or an arm missing from the outline, or something extra included): "
                            "retake the photos")
+        merged = [lv for lv in ("chest", "waist") if m is not None and t[f"{lv}_merge"].iloc[0] > 0.5]
+        if merged:
+            # BodyM people always show a gap between arm and torso; when the arm touches the body, its width
+            # is counted as torso and girths come out far too large (+20 cm waist on real photos, D-054).
+            reasons.append(f"the arms touch the body at the {' and '.join(merged)} in the front photo: hold "
+                           "the arms away from the body (about 45 degrees) with a clear gap at the waist")
         table = gfit.apply_correction(t, geo_fit)
         if m is not None and not bool(t["geo_ok"].iloc[0]):
             reasons.append("chest, waist or hip level could not be found on the outline: retake the photos")
