@@ -426,3 +426,13 @@ def test_arms_touching_the_waist_give_a_clear_retake_reason(run, monkeypatch):
     monkeypatch.setattr(geometry_fit, "level_table", merged)
     doc = predict.predict(run["front"], run["side"], 165, "female", run["ckpt"], weight_kg=60)
     assert any("arms touch the body at the" in r and "waist" in r for r in doc["retake"]["reasons"])
+
+
+def test_borderline_value_is_kept_with_a_warning_but_impossible_one_withheld():
+    from anthro import output, predict
+    est = {"arm_length": output.Estimate(44.2, "photo_model", "measured"),     # range 45-80, BodyM def
+           "chest_girth": output.Estimate(-50.0, "photo_model", "measured")}
+    out, notes = predict.sanity_checks(est, "male", {})
+    assert out["arm_length"].value_cm == 44.2
+    assert any("arm length: 44.2 cm is just outside" in n for n in notes)
+    assert out["chest_girth"].value_cm is None

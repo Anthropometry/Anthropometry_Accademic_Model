@@ -159,12 +159,19 @@ def sanity_checks(estimates: dict, sex: str, rough: dict) -> tuple[dict, list[st
         if e.value_cm is None or e.quality == "measured" and e.source == "input":
             continue
         lo, hi = labels[code]["adult_range_cm"]
-        if not lo <= e.value_cm <= hi:
+        # The adult range follows the app's (tailor's) definition; several model values use BodyM's or
+        # ANSUR's definition, which can sit just outside it (BodyM arm length ~46 cm against a 45-80 range;
+        # a normal value was withheld on a real photo, 28 Nov 2026). Only clearly impossible values
+        # (beyond RANGE_MARGIN) are withheld; borderline ones are kept with a warning.
+        if not lo * (1 - RANGE_MARGIN) <= e.value_cm <= hi * (1 + RANGE_MARGIN):
             # Never show an impossible number, whatever produced it (S7a fix).
             out[code] = output.NOT_AVAILABLE
             what = "the outline" if e.quality == "rough" else "the model"
             notes.append(f"{labels[code]['label'].lower()} withheld: {what} gave {e.value_cm:.1f} cm, "
                          f"outside the adult range {lo}-{hi} cm")
+        elif not lo <= e.value_cm <= hi:
+            notes.append(f"{labels[code]['label'].lower()}: {e.value_cm:.1f} cm is just outside the usual "
+                         f"adult range {lo}-{hi} cm; check it with a tape")
 
     def v(code):
         e = out.get(code)
@@ -199,6 +206,7 @@ def height_warnings(person: dict, model_height_cm: float) -> list[str]:
             "(held within 2 cm)"]
 
 
+RANGE_MARGIN = 0.25   # beyond the adult range by more than this share = impossible, withheld
 IMPLAUSIBLE_HEIGHT_GAP_CM = 10.0   # beyond this the photos, not the person, are the likely problem
 
 PACKAGED_ANSUR = "data/ansur_formulas.json"
